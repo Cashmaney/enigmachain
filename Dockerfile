@@ -1,7 +1,7 @@
 # Simple usage with a mounted data directory:
-# > docker build -t gaia .
-# > docker run -it -p 46657:46657 -p 46656:46656 -v ~/.gaiad:/root/.gaiad -v ~/.gaiacli:/root/.gaiacli gaia gaiad init
-# > docker run -it -p 46657:46657 -p 46656:46656 -v ~/.gaiad:/root/.gaiad -v ~/.gaiacli:/root/.gaiacli gaia gaiad start
+# > docker build -t enigma .
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.enigmad:/root/.enigmad -v ~/.enigmacli:/root/.enigmacli enigma enigmad init
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.enigmad:/root/.enigmad -v ~/.enigmacli:/root/.enigmacli enigma enigmad start
 FROM golang:alpine AS build-env
 
 # Set up dependencies
@@ -11,7 +11,7 @@ ENV PACKAGES curl make git libc-dev bash gcc linux-headers eudev-dev python
 RUN apk add $PACKAGES
 
 # Set working directory for the build
-WORKDIR /go/src/github.com/enigmampc/enigmachain
+WORKDIR /go/src/github.com/enigmampc/enigmablockchain
 
 # Add source files
 COPY . .
@@ -25,19 +25,19 @@ FROM alpine:edge
 RUN apk add --update ca-certificates
 WORKDIR /root
 
-# Run gaiad by default, omit entrypoint to ease using container with gaiacli
+# Run enigmad by default, omit entrypoint to ease using container with enigmacli
 # CMD ["/bin/bash"]
 
 # Copy over binaries from the build-env
-COPY --from=build-env /go/src/github.com/enigmampc/enigmachain/enigmad /usr/bin/enigmad
-COPY --from=build-env  /go/src/github.com/enigmampc/enigmachain/enigmacli /usr/bin/enigmacli
+COPY --from=build-env /go/src/github.com/enigmampc/enigmablockchain/enigmad /usr/bin/enigmad
+COPY --from=build-env  /go/src/github.com/enigmampc/enigmablockchain/enigmacli /usr/bin/enigmacli
 
 COPY ./packaging_docker/docker_start.sh .
 
 RUN chmod +x /usr/bin/enigmad
 RUN chmod +x /usr/bin/enigmacli
 RUN chmod +x docker_start.sh .
-# Run gaiad by default, omit entrypoint to ease using container with gaiacli
+# Run enigmad by default, omit entrypoint to ease using container with enigmacli
 #CMD ["/root/enigmad"]
 
 ####### STAGE 1 -- build core

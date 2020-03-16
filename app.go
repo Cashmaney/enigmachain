@@ -4,8 +4,12 @@ import (
 	"encoding/json"
 	"io"
 	"os"
+	"path/filepath"
 
+	"github.com/enigmampc/EnigmaBlockchain/x/compute"
+	"github.com/spf13/viper"
 	abci "github.com/tendermint/tendermint/abci/types"
+	"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -56,6 +60,7 @@ var (
 		distr.AppModuleBasic{},
 		gov.NewAppModuleBasic(paramsclient.ProposalHandler, distr.ProposalHandler, upgradeclient.ProposalHandler),
 		params.AppModuleBasic{},
+		compute.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
@@ -115,12 +120,19 @@ type EnigmaChainApp struct {
 	paramsKeeper   params.Keeper
 	upgradeKeeper  upgrade.Keeper
 	evidenceKeeper evidence.Keeper
+	computeKeeper  compute.Keeper
 
 	// the module manager
 	mm *module.Manager
 
 	// simulation manager
 	sm *module.SimulationManager
+}
+
+// WasmWrapper allows us to use namespacing in the config file
+// This is only used for parsing in the app, x/compute expects WasmConfig
+type WasmWrapper struct {
+	Wasm compute.WasmConfig `mapstructure:"wasm"`
 }
 
 // NewEnigmaChainApp is a constructor function for enigmaChainApp
@@ -153,6 +165,7 @@ func NewEnigmaChainApp(
 		params.StoreKey,
 		upgrade.StoreKey,
 		evidence.StoreKey,
+		compute.StoreKey,
 	)
 
 	tKeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
@@ -247,6 +260,21 @@ func NewEnigmaChainApp(
 
 	app.evidenceKeeper = *evidenceKeeper
 
+	// just re-use the full router - do we want to limit this more?
+	var computeRouter = bApp.Router()
+	// better way to get this dir???
+	homeDir := viper.GetString(cli.HomeFlag)
+	computeDir := filepath.Join(homeDir, ".compute")
+
+	wasmWrap := WasmWrapper{Wasm: compute.DefaultWasmConfig()}
+	err := viper.Unmarshal(&wasmWrap)
+	if err != nil {
+		panic("error while reading wasm config: " + err.Error())
+	}
+	wasmConfig := wasmWrap.Wasm
+
+	app.computeKeeper = compute.NewKeeper(app.cdc, keys[compute.StoreKey], app.accountKeeper, app.bankKeeper, computeRouter, computeDir, wasmConfig)
+
 	// register the proposal types
 	govRouter := gov.NewRouter()
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
@@ -281,6 +309,7 @@ func NewEnigmaChainApp(
 		staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
 		upgrade.NewAppModule(app.upgradeKeeper),
 		evidence.NewAppModule(app.evidenceKeeper),
+		compute.NewAppModule(app.computeKeeper),
 	)
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -304,6 +333,7 @@ func NewEnigmaChainApp(
 		crisis.ModuleName,
 		genutil.ModuleName,
 		evidence.ModuleName,
+		compute.ModuleName,
 	)
 
 	// register all module routes and module queriers
@@ -415,7 +445,6 @@ func GetMaccPerms() map[string][]string {
 
 func (app *EnigmaChainApp) ExportAppStateAndValidators(forZeroHeight bool, jailWhiteList []string,
 ) (appState json.RawMessage, validators []tmtypes.GenesisValidator, err error) {
-
 	// as if they could withdraw from the start of the next block
 	ctx := app.NewContext(true, abci.Header{Height: app.LastBlockHeight()})
 
