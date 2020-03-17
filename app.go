@@ -2,6 +2,7 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap"
 	"io"
 	"os"
 	"path/filepath"
@@ -66,6 +67,7 @@ var (
 		supply.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
+		tokenswap.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -76,6 +78,7 @@ var (
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
 		gov.ModuleName:            {supply.Burner},
+		tokenswap.ModuleName:      {supply.Minter},
 	}
 )
 
@@ -108,20 +111,20 @@ type EnigmaChainApp struct {
 	tKeys map[string]*sdk.TransientStoreKey
 
 	// keepers
-	accountKeeper  auth.AccountKeeper
-	bankKeeper     bank.Keeper
-	supplyKeeper   supply.Keeper
-	stakingKeeper  staking.Keeper
-	slashingKeeper slashing.Keeper
-	mintKeeper     mint.Keeper
-	distrKeeper    distr.Keeper
-	govKeeper      gov.Keeper
-	crisisKeeper   crisis.Keeper
-	paramsKeeper   params.Keeper
-	upgradeKeeper  upgrade.Keeper
-	evidenceKeeper evidence.Keeper
-	computeKeeper  compute.Keeper
-
+	accountKeeper   auth.AccountKeeper
+	bankKeeper      bank.Keeper
+	supplyKeeper    supply.Keeper
+	stakingKeeper   staking.Keeper
+	slashingKeeper  slashing.Keeper
+	mintKeeper      mint.Keeper
+	distrKeeper     distr.Keeper
+	govKeeper       gov.Keeper
+	crisisKeeper    crisis.Keeper
+	paramsKeeper    params.Keeper
+	upgradeKeeper   upgrade.Keeper
+	evidenceKeeper  evidence.Keeper
+	computeKeeper   compute.Keeper
+	tokenSwapKeeper tokenswap.Keeper
 	// the module manager
 	mm *module.Manager
 
@@ -166,6 +169,7 @@ func NewEnigmaChainApp(
 		upgrade.StoreKey,
 		evidence.StoreKey,
 		compute.StoreKey,
+		tokenswap.StoreKey,
 	)
 
 	tKeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
@@ -190,7 +194,7 @@ func NewEnigmaChainApp(
 	govSubspace := app.paramsKeeper.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
 	crisisSubspace := app.paramsKeeper.Subspace(crisis.DefaultParamspace)
 	evidenceSubspace := app.paramsKeeper.Subspace(evidence.DefaultParamspace)
-
+	tokenswapSubspace := app.paramsKeeper.Subspace(tokenswap.DefaultParamspace)
 	// The AccountKeeper handles address -> account lookups
 	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
@@ -260,6 +264,7 @@ func NewEnigmaChainApp(
 
 	app.evidenceKeeper = *evidenceKeeper
 
+	app.tokenSwapKeeper = tokenswap.NewKeeper(app.cdc, keys[tokenswap.StoreKey], tokenswapSubspace, app.supplyKeeper)
 	// just re-use the full router - do we want to limit this more?
 	var computeRouter = bApp.Router()
 	// better way to get this dir???
@@ -310,6 +315,7 @@ func NewEnigmaChainApp(
 		upgrade.NewAppModule(app.upgradeKeeper),
 		evidence.NewAppModule(app.evidenceKeeper),
 		compute.NewAppModule(app.computeKeeper),
+		tokenswap.NewAppModule(app.tokenSwapKeeper, app.supplyKeeper, app.accountKeeper),
 	)
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -334,6 +340,7 @@ func NewEnigmaChainApp(
 		genutil.ModuleName,
 		evidence.ModuleName,
 		compute.ModuleName,
+		tokenswap.ModuleName,
 	)
 
 	// register all module routes and module queriers
