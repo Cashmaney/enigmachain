@@ -22,11 +22,11 @@ const (
 
 // TokenSwap struct containing the data of the TokenSwap. json and yaml tags are used to specify field names when marshalled
 type TokenSwapRecord struct {
-	BurnTxHash     string         `json:"ethereum_tx_hash" yaml:"ethereum_tx_hash"`
-	EthereumSender string         `json:"ethereum_sender" yaml:"ethereum_sender"`
-	Receiver       sdk.AccAddress `json:"receiver" yaml:"receiver"`
-	AmountUSCRT    sdk.Coin       `json:"amount_uscrt" yaml:"amount_uscrt"`
-	Done           bool           `json:"done" yaml:"done"`
+	BurnTxHash     EthereumTxHash  `json:"ethereum_tx_hash" yaml:"ethereum_tx_hash"`
+	EthereumSender EthereumAddress `json:"ethereum_sender" yaml:"ethereum_sender"`
+	Receiver       sdk.AccAddress  `json:"receiver" yaml:"receiver"`
+	AmountUSCRT    sdk.Coin        `json:"amount_uscrt" yaml:"amount_uscrt"`
+	Done           bool            `json:"done" yaml:"done"`
 }
 
 // TokenSwap struct containing the data of the TokenSwap. json and yaml tags are used to specify field names when marshalled
@@ -37,10 +37,9 @@ type Params struct {
 }
 
 // NewTokenSwap Returns a new TokenSwap
-func NewTokenSwapRecord(burnTxHash string, ethereumSender string, receiver sdk.AccAddress, AmountUSCRT sdk.Coin, done bool) TokenSwapRecord {
-	ethereumTxHashLowercase := strings.ToLower(burnTxHash)
+func NewTokenSwapRecord(burnTxHash EthereumTxHash, ethereumSender EthereumAddress, receiver sdk.AccAddress, AmountUSCRT sdk.Coin, done bool) TokenSwapRecord {
 	return TokenSwapRecord{
-		BurnTxHash:     ethereumTxHashLowercase,
+		BurnTxHash:     burnTxHash,
 		EthereumSender: ethereumSender,
 		Receiver:       receiver,
 		AmountUSCRT:    AmountUSCRT,

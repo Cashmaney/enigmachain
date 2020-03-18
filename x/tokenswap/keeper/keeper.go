@@ -5,12 +5,8 @@ import (
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/subspace"
 	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap/types"
 
-	"strconv"
-	"strings"
-
-	"github.com/tendermint/tendermint/libs/log"
-
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -56,32 +52,32 @@ func (k Keeper) ValidateTokenSwapSigner(ctx sdk.Context, signer sdk.AccAddress) 
 	return nil
 }
 
+func (k Keeper) GetMintedCoin(ctx sdk.Context, amtEngDust sdk.Dec) sdk.Coin {
+	// ENG has 8 decimals, and SCRT has 6, so we divide the number of ENG dust by 100
+	amountUscrt := amtEngDust.Mul(sdk.NewDecWithPrec(1, 2))
+	mintMultiplier := k.GetMintingMultiplier(ctx)
+	uscrtToMint := mintMultiplier.MulInt64(amountUscrt.Int64())
+
+	return sdk.NewCoin("uscrt", uscrtToMint.RoundInt())
+}
+
 // ProcessTokenSwapRequest processes a claim that has just completed successfully with consensus
-func (k Keeper) ProcessTokenSwapRequest(ctx sdk.Context, ethereumTxHash string, ethereumSender string, receiver sdk.AccAddress, amountENG string) error {
+// Also note that at this stage we already validated the swap request parameters
+func (k Keeper) ProcessTokenSwapRequest(
+	ctx sdk.Context, request types.MsgSwapRequest) error {
 	// Store the token swap request in our state
 	// We need this to verify we process each request only once
 	store := ctx.KVStore(k.storeKey)
 
-	engToMint, err := strconv.ParseInt(amountENG, 10, 64)
-	if err != nil {
-		return err
-	}
+	uscrtCoin := k.GetMintedCoin(ctx, request.AmountENG)
 
-	// ENG has 8 decimals, and SCRT has 6, so we divide the number of ENG dust by 10^2
-	amountUscrt := engToMint / 1e2
+	tokenSwap := types.NewTokenSwapRecord(request.BurnTxHash, request.EthereumSender, request.Receiver, uscrtCoin, false)
 
-	mintMultiplier := k.GetMintingMultiplier(ctx)
-
-	uscrtToMint := mintMultiplier.MulInt64(amountUscrt)
-
-	amountUscrtCoins := sdk.NewCoin("uscrt", uscrtToMint.RoundInt())
-
-	// update the status of the swap
-	tokenSwap := types.NewTokenSwapRecord(ethereumTxHash, ethereumSender, receiver, amountUscrtCoins, false)
-	store.Set([]byte(tokenSwap.BurnTxHash), k.cdc.MustMarshalBinaryBare(tokenSwap))
+	// Register the swap as started
+	store.Set(tokenSwap.BurnTxHash.Bytes(), k.cdc.MustMarshalBinaryBare(tokenSwap))
 
 	// Mint new uSCRTs
-	err = k.supplyKeeper.MintCoins(
+	err := k.supplyKeeper.MintCoins(
 		ctx,
 		types.ModuleName,
 		sdk.NewCoins(tokenSwap.AmountUSCRT),
@@ -103,27 +99,24 @@ func (k Keeper) ProcessTokenSwapRequest(ctx sdk.Context, ethereumTxHash string, 
 
 	tokenSwap.Done = true
 
-	//update the status of the swap
-	store.Set([]byte(tokenSwap.BurnTxHash), k.cdc.MustMarshalBinaryBare(tokenSwap))
+	//update the status of the swap as successful
+	store.Set(tokenSwap.BurnTxHash.Bytes(), k.cdc.MustMarshalBinaryBare(tokenSwap))
 
 	return nil
 }
 
 // GetPastTokenSwapRequest retrives a past token swap request
-func (k Keeper) GetPastTokenSwapRequest(ctx sdk.Context, ethereumTxHash string) (types.TokenSwapRecord, error) {
+func (k Keeper) GetPastTokenSwapRequest(ctx sdk.Context, ethereumTxHash types.EthereumTxHash) (types.TokenSwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Lowercase ethereumTxHash as this is our indexed field
-	ethereumTxHashLowercase := strings.ToLower(ethereumTxHash)
-
-	if !store.Has([]byte(ethereumTxHashLowercase)) {
+	if !store.Has(ethereumTxHash.Bytes()) {
 		return types.TokenSwapRecord{}, sdkerrors.Wrap(
 			sdkerrors.ErrUnknownRequest,
-			"Unknown Ethereum tx hash "+ethereumTxHash)
+			"Unknown Ethereum tx hash: "+ethereumTxHash.String())
 
 	}
 
-	bz := store.Get([]byte(ethereumTxHashLowercase))
+	bz := store.Get(ethereumTxHash.Bytes())
 	var tokenSwap types.TokenSwapRecord
 	k.cdc.MustUnmarshalBinaryBare(bz, &tokenSwap)
 

@@ -48,7 +48,6 @@ func handleMsgTokenSwap(
 	if err == nil {
 		// msg.EthereumTxHash already exists in db
 		// So this request was already processed
-
 		// Check if we might have failed processing the transaction
 		if swapRecord.Done {
 			return nil, sdkerrors.Wrap(
@@ -63,10 +62,7 @@ func handleMsgTokenSwap(
 
 	err = keeper.ProcessTokenSwapRequest(
 		ctx,
-		msg.BurnTxHash,
-		msg.EthereumSender,
-		msg.Receiver,
-		msg.AmountENG,
+		msg,
 	)
 	return &sdk.Result{}, err
 

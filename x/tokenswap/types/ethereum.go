@@ -15,10 +15,24 @@ const (
 	EthereumTxHashLength  = 32
 )
 
+type EthereumAddress [EthereumAddressLength]byte
+type EthereumTxHash [EthereumTxHashLength]byte
+
 //
 // Address is a common interface for different types of addresses used by the SDK
-type EthIf interface {
-	Equals(EthIf) bool
+type EthAddr interface {
+	Equals(EthAddr) bool
+	Empty() bool
+	Marshal() ([]byte, error)
+	MarshalJSON() ([]byte, error)
+	MarshalYAML() (interface{}, error)
+	Bytes() []byte
+	String() string
+	Format(s fmt.State, verb rune)
+}
+
+type EthHash interface {
+	Equals(EthHash) bool
 	Empty() bool
 	Marshal() ([]byte, error)
 	MarshalJSON() ([]byte, error)
@@ -29,25 +43,24 @@ type EthIf interface {
 }
 
 // Ensure that different address types implement the interface
-var _ EthIf = EthereumAddress{}
-
-//var (
-//	hashT    = reflect.TypeOf(EthereumTxHash{})
-//	addressT = reflect.TypeOf(EthereumAddress{})
-//)
-//
-//type EthereumAddress [AddressLength]byte
-// var _ sdk.Address = EthereumAddress{}
-
+var _ EthAddr = EthereumAddress{}
 var _ yaml.Marshaler = EthereumAddress{}
 
-type EthereumAddress [EthereumAddressLength]byte
+// Ensure that different address types implement the interface
+var _ EthHash = EthereumTxHash{}
+var _ yaml.Marshaler = EthereumTxHash{}
+
+// **** EthereumAddress Functions
 
 func (a EthereumAddress) MarshalYAML() (interface{}, error) {
 	return a.String(), nil
 }
 
-func (a EthereumAddress) Equals(other EthIf) bool {
+func (a *EthereumAddress) UnmarshalYAML(data []byte) error {
+	return a.UnmarshalJSON(data)
+}
+
+func (a EthereumAddress) Equals(other EthAddr) bool {
 	if a.Empty() && other.Empty() {
 		return true
 	}
@@ -106,74 +119,11 @@ func (a EthereumAddress) Format(s fmt.State, verb rune) {
 	_, _ = fmt.Fprintf(s, "%"+string(verb), a[:])
 }
 
-type EthereumTxHash [EthereumTxHashLength]byte
-
-func BytesToTxHash(b []byte) EthereumTxHash {
-	var a EthereumTxHash
-	a.SetBytes(b)
-	return a
-}
-
-func BytesToAddress(b []byte) EthereumAddress {
-	var a EthereumAddress
-	a.SetBytes(b)
-	return a
-}
-
-func (h *EthereumTxHash) SetBytes(b []byte) {
-	if len(b) > len(h) {
-		b = b[len(b)-EthereumTxHashLength:]
-	}
-	copy(h[EthereumTxHashLength-len(b):], b)
-}
-
 func (a *EthereumAddress) SetBytes(b []byte) {
 	if len(b) > len(a) {
 		b = b[len(b)-EthereumAddressLength:]
 	}
 	copy(a[EthereumAddressLength-len(b):], b)
-}
-
-// has0xPrefix validates str begins with '0x' or '0X'.
-func has0xPrefix(str string) bool {
-	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
-}
-
-// FromHex returns the bytes represented by the hexadecimal string s.
-// s may be prefixed with "0x".
-func FromHex(s string) []byte {
-	if has0xPrefix(s) {
-		s = s[2:]
-	}
-	if len(s)%2 == 1 {
-		s = "0" + s
-	}
-	return Hex2Bytes(s)
-}
-
-// Hex2Bytes returns the bytes represented by the hexadecimal string str.
-func Hex2Bytes(str string) []byte {
-	h, _ := hex.DecodeString(str)
-	return h
-}
-
-func HexToAddress(s string) (addr EthereumAddress, err error) {
-	addrBytes := FromHex(s)
-	if len(addrBytes) != EthereumAddressLength {
-		return addr, errors.New("invalid length")
-	}
-	return BytesToAddress(addrBytes), nil
-}
-
-func HexToTxHash(s string) EthereumTxHash {
-	return BytesToTxHash(FromHex(s))
-}
-
-func (a EthereumAddress) String() string {
-	return a.Hex()
-}
-func (h EthereumTxHash) String() string {
-	return h.Hex()
 }
 
 // Hex returns an EIP55-compliant hex string representation of the address.
@@ -198,7 +148,144 @@ func (a EthereumAddress) Hex() string {
 	return "0x" + string(result)
 }
 
+func (a EthereumAddress) String() string {
+	return a.Hex()
+}
+
+func BytesToAddress(b []byte) EthereumAddress {
+	var a EthereumAddress
+	a.SetBytes(b)
+	return a
+}
+
+func HexToAddress(s string) (addr EthereumAddress, err error) {
+	addrBytes := FromHex(s)
+	if len(addrBytes) != EthereumAddressLength {
+		return addr, errors.New("invalid length")
+	}
+	return BytesToAddress(addrBytes), nil
+}
+
+// ***** EthereumTxHash Functions
+
+func (h EthereumTxHash) MarshalYAML() (interface{}, error) {
+	return h.String(), nil
+}
+
+func (h *EthereumTxHash) UnmarshalYAML(data []byte) error {
+	return h.UnmarshalJSON(data)
+}
+
+func (h EthereumTxHash) Equals(other EthHash) bool {
+	if h.Empty() && other.Empty() {
+		return true
+	}
+
+	return bytes.Equal(h.Bytes(), other.Bytes())
+}
+
+func (h EthereumTxHash) Empty() bool {
+	if h.Bytes() == nil {
+		return true
+	}
+
+	aa2 := EthereumTxHash{}
+	return bytes.Equal(h.Bytes(), aa2.Bytes())
+}
+
+func (h EthereumTxHash) Marshal() ([]byte, error) {
+	return h[:], nil
+}
+
+func (h EthereumTxHash) MarshalJSON() ([]byte, error) {
+	return json.Marshal(h.String())
+}
+
+// UnmarshalJSON unmarshals from JSON assuming Bech32 encoding.
+func (h *EthereumTxHash) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+
+	aa2, err := HexToTxHash(s)
+	if err != nil {
+		return err
+	}
+
+	*h = aa2
+	return nil
+}
+
+// Unmarshal sets the address to the given data. It is needed for protobuf compatibility.
+func (h *EthereumTxHash) Unmarshal(data []byte) error {
+	if len(data) != EthereumAddressLength {
+		return errors.New("invalid ethereum address length")
+	}
+	copy(h[:], data)
+	return nil
+}
+
+func (h EthereumTxHash) Bytes() []byte {
+	return h[:]
+}
+
+func (h EthereumTxHash) Format(s fmt.State, verb rune) {
+	_, _ = fmt.Fprintf(s, "%"+string(verb), h[:])
+}
+
+func BytesToTxHash(b []byte) EthereumTxHash {
+	var a EthereumTxHash
+	a.SetBytes(b)
+	return a
+}
+
+func HexToTxHash(s string) (addr EthereumTxHash, err error) {
+	addrBytes := FromHex(s)
+	if len(addrBytes) != EthereumTxHashLength {
+		return addr, errors.New("invalid length")
+	}
+	return BytesToTxHash(addrBytes), nil
+}
+
 func (h EthereumTxHash) Hex() string { return EncodeHex(h[:]) }
+
+func (h EthereumTxHash) String() string {
+	return h.Hex()
+}
+
+func (h *EthereumTxHash) SetBytes(b []byte) {
+	if len(b) > len(h) {
+		b = b[len(b)-EthereumTxHashLength:]
+	}
+	copy(h[EthereumTxHashLength-len(b):], b)
+}
+
+// ***** Generic Functions
+
+// has0xPrefix validates str begins with '0x' or '0X'.
+func has0xPrefix(str string) bool {
+	return len(str) >= 2 && str[0] == '0' && (str[1] == 'x' || str[1] == 'X')
+}
+
+// FromHex returns the bytes represented by the hexadecimal string s.
+// s may be prefixed with "0x".
+func FromHex(s string) []byte {
+	if has0xPrefix(s) {
+		s = s[2:]
+	}
+	if len(s)%2 == 1 {
+		s = "0" + s
+	}
+	return Hex2Bytes(s)
+}
+
+// Hex2Bytes returns the bytes represented by the hexadecimal string str.
+func Hex2Bytes(str string) []byte {
+	h, _ := hex.DecodeString(str)
+	return h
+}
 
 // Encode encodes b as a hex string with 0x prefix.
 func EncodeHex(b []byte) string {

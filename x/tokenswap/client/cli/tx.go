@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"strconv"
 
 	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap/types"
 	"github.com/spf13/cobra"
@@ -25,15 +26,32 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-			ethereumTxHash := args[0]
-			ethereumSender := args[1]
-			amountENG := args[2]
+			// ethereumTxHash := args[0]
+			// ethereumSender := args[1]
 
-			receiver, err := sdk.AccAddressFromBech32(args[3])
-			signer := cliCtx.GetFromAddress()
+			ethereumTxHash, err := types.HexToTxHash(args[0])
 			if err != nil {
 				return err
 			}
+
+			ethereumSender, err := types.HexToAddress(args[1])
+			if err != nil {
+				return err
+			}
+
+			amt, err := strconv.ParseInt(args[2], 10, 32)
+			if err != nil {
+				return err
+			}
+
+			amountENG := sdk.NewDec(amt)
+
+			receiver, err := sdk.AccAddressFromBech32(args[3])
+			if err != nil {
+				return err
+			}
+
+			signer := cliCtx.GetFromAddress()
 
 			msg := types.NewMsgSwapRequest(
 				ethereumTxHash,

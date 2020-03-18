@@ -1,10 +1,6 @@
 package types
 
 import (
-	"fmt"
-	"regexp"
-	"strconv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -14,10 +10,10 @@ const RouterKey = "tokenswap"
 
 // MsgSwapRequest defines the MsgSwapRequest Message
 type MsgSwapRequest struct {
-	BurnTxHash     string
-	EthereumSender string
+	BurnTxHash     EthereumTxHash
+	EthereumSender EthereumAddress
 	Receiver       sdk.AccAddress
-	AmountENG      string
+	AmountENG      sdk.Dec
 	SignerAddr     sdk.AccAddress
 }
 
@@ -25,11 +21,8 @@ type MsgSwapRequest struct {
 var _ sdk.Msg = MsgSwapRequest{}
 
 // NewMsgSwapRequest Returns a new MsgSwapRequest
-func NewMsgSwapRequest(burnTxHash string, ethereumSender string, receiver sdk.AccAddress, signerAddr sdk.AccAddress, amountENG string) MsgSwapRequest {
-
+func NewMsgSwapRequest(burnTxHash EthereumTxHash, ethereumSender EthereumAddress, receiver sdk.AccAddress, signerAddr sdk.AccAddress, amountENG sdk.Dec) MsgSwapRequest {
 	return MsgSwapRequest{
-		//BurnTxHash:     HexToTxHash(burnTxHash),
-		//EthereumSender: HexToAddress(ethereumSender),
 		BurnTxHash:     burnTxHash,
 		EthereumSender: ethereumSender,
 		Receiver:       receiver,
@@ -44,42 +37,60 @@ func (msg MsgSwapRequest) Route() string { return RouterKey }
 // Type should return the action
 func (msg MsgSwapRequest) Type() string { return "tokenswap" }
 
-var ethereumTxHashRegex = regexp.MustCompile(`^0x[0-9a-fA-F]{64}$`)
-var ethereumAddressRegex = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
-
 // ValidateBasic runs stateless checks on the message
 func (msg MsgSwapRequest) ValidateBasic() error {
-	if !ethereumTxHashRegex.MatchString(msg.BurnTxHash) {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrUnknownRequest,
-			fmt.Sprintf(
-				`Invalid EthereumTxHash %s accoding to regex '%s'`,
-				msg.BurnTxHash,
-				ethereumTxHashRegex.String(),
-			),
-		)
-	}
-	if !ethereumAddressRegex.MatchString(msg.EthereumSender) {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrUnknownRequest,
-			fmt.Sprintf(
-				`Invalid EthereumSender %s accoding to regex '%s'`,
-				msg.EthereumSender,
-				ethereumAddressRegex.String(),
-			),
-		)
-	}
-
-	if msg.Receiver.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
-	}
-
-	engDust, err := strconv.ParseInt(msg.AmountENG, 10, 64)
+	err := msg.ValidateAmount()
 	if err != nil {
 		return err
 	}
-	if engDust <= 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Amount %d must be positive", engDust))
+
+	err = msg.validateEthSender()
+	if err != nil {
+		return err
+	}
+
+	err = msg.ValidateTxHash()
+	if err != nil {
+		return err
+	}
+
+	err = msg.ValidateReceiver()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg MsgSwapRequest) ValidateAmount() error {
+	if msg.AmountENG.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "amount to swap must be positive")
+	}
+	if !msg.AmountENG.Equal(sdk.NewDecFromInt(msg.AmountENG.RoundInt())) {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "amount to swap must be an integer")
+	}
+	if msg.AmountENG.LT(sdk.NewDec(100)) {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "amount cannot be under 100, due to lost precision from ENG dust <-> uSCRT")
+	}
+	return nil
+}
+
+func (msg MsgSwapRequest) ValidateReceiver() error {
+	if msg.Receiver.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
+	}
+	return nil
+}
+
+func (msg MsgSwapRequest) ValidateTxHash() error {
+	if msg.BurnTxHash.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
+	}
+	return nil
+}
+
+func (msg MsgSwapRequest) validateEthSender() error {
+	if msg.EthereumSender.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
 	}
 	return nil
 }

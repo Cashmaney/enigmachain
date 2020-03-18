@@ -19,7 +19,10 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
 
-			ethereumTxHash := args[0]
+			ethereumTxHash, err := types.HexToTxHash(args[0])
+			if err != nil {
+				return err
+			}
 
 			bz, err := cdc.MarshalJSON(types.NewGetTokenSwapParams(ethereumTxHash))
 			if err != nil {
@@ -32,7 +35,7 @@ func GetQueryCmd(queryRoute string, cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			var out types.TokenSwap
+			var out types.TokenSwapRecord
 			err = cdc.UnmarshalJSON(res, &out)
 			if err != nil {
 				return err
