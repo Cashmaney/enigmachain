@@ -44,7 +44,7 @@ I added a handy dockerfile that runs an independent chain for easy testing/playi
 
 * Send the multisig address some coins:
 
-`enigmacli tx send <one of the above addresses from step 3> enigma1n4pc2w3us9n4axa0ppadd3kv3c0sar8c4ju6k7 10000000uscrt --keyring-backend test`
+`enigmacli tx send <one of the above addresses> enigma1n4pc2w3us9n4axa0ppadd3kv3c0sar8c4ju6k7 10000000uscrt --keyring-backend test`
 
 * Broadcast the transaction:
 
