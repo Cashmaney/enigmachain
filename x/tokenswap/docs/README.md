@@ -28,7 +28,7 @@ Obviously currently the defaults are set for testing purposes and will be change
 
 ##### Module
 
-I added a handle dockerfile that runs an independent chain for easy testing/playing around.
+I added a handy dockerfile that runs an independent chain for easy testing/playing around.
  
 * Compile the code, and run the chain in a container
 
