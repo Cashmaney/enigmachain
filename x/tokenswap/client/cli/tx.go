@@ -2,6 +2,7 @@ package cli
 
 import (
 	"bufio"
+	"errors"
 	"strconv"
 
 	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap/types"
@@ -26,9 +27,6 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 			inBuf := bufio.NewReader(cmd.InOrStdin())
 			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
 
-			// ethereumTxHash := args[0]
-			// ethereumSender := args[1]
-
 			ethereumTxHash, err := types.HexToTxHash(args[0])
 			if err != nil {
 				return err
@@ -41,7 +39,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 
 			amt, err := strconv.ParseInt(args[2], 10, 32)
 			if err != nil {
-				return err
+				return errors.New("amount must be an integer (no decimal funny-business!)")
 			}
 
 			amountENG := sdk.NewDec(amt)
