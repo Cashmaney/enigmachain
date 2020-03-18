@@ -3,6 +3,7 @@ package rest
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/cosmos/cosmos-sdk/client/context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -17,11 +18,6 @@ import (
 const (
 	restEthereumTxHash = "ethereumTxHash"
 )
-
-type getTokenSwapReq struct {
-	BaseReq        rest.BaseReq `json:"base_req"`
-	EthereumTxHash string       `json:"ethereum_tx_hash"`
-}
 
 type createTokenSwapReq struct {
 	BaseReq        rest.BaseReq `json:"base_req"`
@@ -52,9 +48,13 @@ func getTokenSwapHandler(cliCtx context.CLIContext, storeName string) http.Handl
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 
-		ethereumTxHash := vars[restEthereumTxHash]
+		ethTx, err := types.HexToTxHash(vars[restEthereumTxHash])
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
 
-		bz, err := cliCtx.Codec.MarshalJSON(types.NewGetTokenSwapParams(ethereumTxHash))
+		bz, err := cliCtx.Codec.MarshalJSON(types.NewGetTokenSwapParams(ethTx))
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
@@ -85,9 +85,25 @@ func createTokenSwapHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		ethereumTxHash := req.EthereumTxHash
-		ethereumSender := req.EthereumSender
-		amountENG := req.AmountENG
+		ethereumTxHash, err := types.HexToTxHash(req.EthereumTxHash)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		ethereumSender, err := types.HexToAddress(req.EthereumSender)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		amt, err := strconv.ParseInt(req.AmountENG, 10, 32)
+		if err != nil {
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			return
+		}
+
+		amountENG := sdk.NewDec(amt)
 
 		receiver, err := sdk.AccAddressFromBech32(req.Receiver)
 		if err != nil {
@@ -101,7 +117,7 @@ func createTokenSwapHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgTokenSwap(
+		msg := types.NewMsgSwapRequest(
 			ethereumTxHash,
 			ethereumSender,
 			receiver,

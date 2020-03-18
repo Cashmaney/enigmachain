@@ -40,12 +40,12 @@ func (AppModuleBasic) RegisterCodec(cdc *codec.Codec) {
 // DefaultGenesis returns default genesis state as raw bytes for the distribution
 // module.
 func (amb AppModuleBasic) DefaultGenesis() json.RawMessage {
-	return ModuleCdc.MustMarshalJSON(types.DefaultGenesisState())
+	return ModuleCdc.MustMarshalJSON(DefaultGenesisState())
 }
 
 // ValidateGenesis performs genesis state validation for the tokenswap module.
 func (AppModuleBasic) ValidateGenesis(bz json.RawMessage) error {
-	var data types.GenesisState
+	var data GenesisState
 	if err := ModuleCdc.UnmarshalJSON(bz, &data); err != nil {
 		return fmt.Errorf("failed to unmarshal %s genesis state: %w", ModuleName, err)
 	}
@@ -77,25 +77,25 @@ type AppModule struct {
 	AppModuleBasic
 	AppModuleSimulation
 
-	TokenSwapKeeper Keeper
-	SupplyKeeper    types.SupplyKeeper
-	AccountKeeper   types.AccountKeeper
+	swapKeeper    SwapKeeper
+	supplyKeeper  SupplyKeeper
+	accountKeeper AccountKeeper
 }
 
 // NewAppModule creates a new AppModule object
 func NewAppModule(
-	tokenSwapKeeper Keeper,
-	supplyKeeper types.SupplyKeeper,
-	accountKeeper types.AccountKeeper,
+	swapKeeper SwapKeeper,
+	supplyKeeper SupplyKeeper,
+	accountKeeper AccountKeeper,
 ) AppModule {
 
 	return AppModule{
 		AppModuleBasic:      AppModuleBasic{},
 		AppModuleSimulation: AppModuleSimulation{},
 
-		SupplyKeeper:    supplyKeeper,
-		AccountKeeper:   accountKeeper,
-		TokenSwapKeeper: tokenSwapKeeper,
+		supplyKeeper:  supplyKeeper,
+		accountKeeper: accountKeeper,
+		swapKeeper:    swapKeeper,
 	}
 }
 
@@ -115,7 +115,7 @@ func (AppModule) Route() string {
 
 // NewHandler returns an sdk.Handler for the tokenswap module.
 func (am AppModule) NewHandler() sdk.Handler {
-	return NewHandler(am.TokenSwapKeeper)
+	return NewHandler(am.swapKeeper)
 }
 
 // QuerierRoute returns the tokenswap module's querier route name.
@@ -125,21 +125,21 @@ func (AppModule) QuerierRoute() string {
 
 // NewQuerierHandler returns the tokenswap module sdk.Querier.
 func (am AppModule) NewQuerierHandler() sdk.Querier {
-	return NewQuerier(am.TokenSwapKeeper, ModuleCdc)
+	return NewQuerier(am.swapKeeper, ModuleCdc)
 }
 
 // InitGenesis performs genesis initialization for the tokenswap module.
 func (am AppModule) InitGenesis(ctx sdk.Context, data json.RawMessage) []abci.ValidatorUpdate {
-	var genesisState types.GenesisState
+	var genesisState GenesisState
 	ModuleCdc.MustUnmarshalJSON(data, &genesisState)
-	InitGenesis(ctx, am.SupplyKeeper, am.TokenSwapKeeper, genesisState)
+	InitGenesis(ctx, am.supplyKeeper, am.swapKeeper, genesisState)
 	return []abci.ValidatorUpdate{}
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the tokenswap
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context) json.RawMessage {
-	gs := ExportGenesis(ctx, am.TokenSwapKeeper)
+	gs := ExportGenesis(ctx, am.swapKeeper)
 	return ModuleCdc.MustMarshalJSON(gs)
 }
 

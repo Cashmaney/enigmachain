@@ -3,7 +3,7 @@ package types
 import "github.com/cosmos/cosmos-sdk/codec"
 
 func RegisterCodec(cdc *codec.Codec) {
-	cdc.RegisterConcrete(MsgTokenSwap{}, "tokenswap/TokenSwap", nil)
+	cdc.RegisterConcrete(MsgSwapRequest{}, "tokenswap/TokenSwap", nil)
 }
 
 var ModuleCdc *codec.Codec

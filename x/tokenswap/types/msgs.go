@@ -1,10 +1,6 @@
 package types
 
 import (
-	"fmt"
-	"regexp"
-	"strconv"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -12,22 +8,22 @@ import (
 // RouterKey is used to route messages and queriers to the greeter module
 const RouterKey = "tokenswap"
 
-// MsgTokenSwap defines the MsgTokenSwap Message
-type MsgTokenSwap struct {
-	EthereumTxHash string
-	EthereumSender string
+// MsgSwapRequest defines the MsgSwapRequest Message
+type MsgSwapRequest struct {
+	BurnTxHash     EthereumTxHash
+	EthereumSender EthereumAddress
 	Receiver       sdk.AccAddress
-	AmountENG      string
+	AmountENG      sdk.Dec
 	SignerAddr     sdk.AccAddress
 }
 
-// Check in compile time that MsgTokenSwap is a sdk.Msg
-var _ sdk.Msg = MsgTokenSwap{}
+// Check in compile time that MsgSwapRequest is a sdk.Msg
+var _ sdk.Msg = MsgSwapRequest{}
 
-// NewMsgTokenSwap Returns a new MsgTokenSwap
-func NewMsgTokenSwap(ethereumTxHash string, ethereumSender string, receiver sdk.AccAddress, signerAddr sdk.AccAddress, amountENG string) MsgTokenSwap {
-	return MsgTokenSwap{
-		EthereumTxHash: ethereumTxHash,
+// NewMsgSwapRequest Returns a new MsgSwapRequest
+func NewMsgSwapRequest(burnTxHash EthereumTxHash, ethereumSender EthereumAddress, receiver sdk.AccAddress, signerAddr sdk.AccAddress, amountENG sdk.Dec) MsgSwapRequest {
+	return MsgSwapRequest{
+		BurnTxHash:     burnTxHash,
 		EthereumSender: ethereumSender,
 		Receiver:       receiver,
 		AmountENG:      amountENG,
@@ -36,62 +32,75 @@ func NewMsgTokenSwap(ethereumTxHash string, ethereumSender string, receiver sdk.
 }
 
 // Route should return the name of the module
-func (msg MsgTokenSwap) Route() string { return RouterKey }
+func (msg MsgSwapRequest) Route() string { return RouterKey }
 
 // Type should return the action
-func (msg MsgTokenSwap) Type() string { return "tokenswap" }
-
-var ethereumTxHashRegex = regexp.MustCompile(`^0x[0-9a-fA-F]{64}$`)
-var ethereumAddressRegex = regexp.MustCompile(`^0x[0-9a-fA-F]{40}$`)
+func (msg MsgSwapRequest) Type() string { return "tokenswap" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgTokenSwap) ValidateBasic() error {
-	if !ethereumTxHashRegex.MatchString(msg.EthereumTxHash) {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrUnknownRequest,
-			fmt.Sprintf(
-				`Invalid EthereumTxHash %s accoding to regex '%s'`,
-				msg.EthereumTxHash,
-				ethereumTxHashRegex.String(),
-			),
-		)
-	}
-	if !ethereumAddressRegex.MatchString(msg.EthereumSender) {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrUnknownRequest,
-			fmt.Sprintf(
-				`Invalid EthereumSender %s accoding to regex '%s'`,
-				msg.EthereumSender,
-				ethereumAddressRegex.String(),
-			),
-		)
-	}
-
-	if msg.Receiver.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
-	}
-
-	engFloat, err := strconv.ParseFloat(msg.AmountENG, 64)
+func (msg MsgSwapRequest) ValidateBasic() error {
+	err := msg.ValidateAmount()
 	if err != nil {
 		return err
 	}
-	if engFloat <= 0 {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, fmt.Sprintf("Amount %f must be positive", engFloat))
+
+	err = msg.validateEthSender()
+	if err != nil {
+		return err
+	}
+
+	err = msg.ValidateTxHash()
+	if err != nil {
+		return err
+	}
+
+	err = msg.ValidateReceiver()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (msg MsgSwapRequest) ValidateAmount() error {
+	if msg.AmountENG.IsZero() {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "amount to swap must be positive")
+	}
+	if !msg.AmountENG.Equal(sdk.NewDecFromInt(msg.AmountENG.RoundInt())) {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "amount to swap must be an integer")
+	}
+	if msg.AmountENG.LT(sdk.NewDec(100)) {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "amount cannot be under 100, due to lost precision from ENG dust <-> uSCRT")
+	}
+	return nil
+}
+
+func (msg MsgSwapRequest) ValidateReceiver() error {
+	if msg.Receiver.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
+	}
+	return nil
+}
+
+func (msg MsgSwapRequest) ValidateTxHash() error {
+	if msg.BurnTxHash.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
+	}
+	return nil
+}
+
+func (msg MsgSwapRequest) validateEthSender() error {
+	if msg.EthereumSender.Empty() {
+		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
 	}
 	return nil
 }
 
 // GetSigners returns the addresses of those required to sign the message
-func (msg MsgTokenSwap) GetSigners() []sdk.AccAddress {
-	//addrString := "enigma1n4pc2w3us9n4axa0ppadd3kv3c0sar8c4ju6k7" // TODO get from genesis.json
-	//multisigAddress, err := sdk.AccAddressFromBech32(addrString)
-	//if err != nil {
-	//	panic("cannot parse multisig address " + addrString)
-	//}
+func (msg MsgSwapRequest) GetSigners() []sdk.AccAddress {
 	return []sdk.AccAddress{msg.SignerAddr}
 }
 
 // GetSignBytes encodes the message for signing
-func (msg MsgTokenSwap) GetSignBytes() []byte {
+func (msg MsgSwapRequest) GetSignBytes() []byte {
 	return sdk.MustSortJSON(ModuleCdc.MustMarshalJSON(msg))
 }

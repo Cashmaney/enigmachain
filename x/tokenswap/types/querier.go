@@ -8,11 +8,11 @@ const (
 // GetTokenSwapParams defines the params for the following queries:
 // - 'custom/tokenswap/get/'
 type GetTokenSwapParams struct {
-	EthereumTxHash string `json:"ethereum_tx_hash"`
+	EthereumTxHash EthereumTxHash `json:"ethereum_tx_hash"`
 }
 
 // NewGetTokenSwapParams creates a new GetTokenSwapParams
-func NewGetTokenSwapParams(ethereumTxHash string) GetTokenSwapParams {
+func NewGetTokenSwapParams(ethereumTxHash EthereumTxHash) GetTokenSwapParams {
 	return GetTokenSwapParams{
 		EthereumTxHash: ethereumTxHash,
 	}

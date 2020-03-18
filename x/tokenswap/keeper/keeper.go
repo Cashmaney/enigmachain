@@ -4,13 +4,9 @@ import (
 	"fmt"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/subspace"
 	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap/types"
-	"math"
-	"strconv"
-	"strings"
-
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -56,31 +52,32 @@ func (k Keeper) ValidateTokenSwapSigner(ctx sdk.Context, signer sdk.AccAddress) 
 	return nil
 }
 
+func (k Keeper) GetMintedCoins(ctx sdk.Context, amtEngDust sdk.Dec) sdk.Coins {
+	// ENG has 8 decimals, and SCRT has 6, so we divide the number of ENG dust by 100
+	mintMultiplier := k.GetMintingMultiplier(ctx)
+
+	c := sdk.NewDecCoins(sdk.NewDecCoin("uscrt", amtEngDust.RoundInt()))
+	coins, _ := c.MulDecTruncate(sdk.NewDecWithPrec(1, 2)).MulDecTruncate(mintMultiplier).TruncateDecimal()
+	return coins
+}
+
 // ProcessTokenSwapRequest processes a claim that has just completed successfully with consensus
-func (k Keeper) ProcessTokenSwapRequest(ctx sdk.Context, ethereumTxHash string, ethereumSender string, receiver sdk.AccAddress, amountENG string) error {
+// Also note that at this stage we already validated the swap request parameters
+func (k Keeper) ProcessTokenSwapRequest(
+	ctx sdk.Context, request types.MsgSwapRequest) error {
+	// Store the token swap request in our state
+	// We need this to verify we process each request only once
+	store := ctx.KVStore(k.storeKey)
 
-	// Convert ENG to uSCRT
-	engFloat, err := strconv.ParseFloat(amountENG, 64)
-	if err != nil {
-		return err
-	}
+	uscrtCoin := k.GetMintedCoins(ctx, request.AmountENG)
 
-	mintMul, err := strconv.ParseFloat(k.GetMintingMultiple(ctx).String(), 64)
-	if err != nil {
-		return err
-	}
+	tokenSwap := types.NewTokenSwapRecord(request.BurnTxHash, request.EthereumSender, request.Receiver, uscrtCoin, false)
 
-	engToMint := engFloat * mintMul
-
-	amountUscrt := int64(math.Ceil(engToMint * 1e6))
-	amountUscrtCoins := sdk.NewCoins(sdk.NewCoin("uscrt", sdk.NewInt(amountUscrt)))
-
-	// Lowercase ethereumTxHash as this is our indexed field
-	ethereumTxHashLowercase := strings.ToLower(ethereumTxHash)
-	tokenSwap := types.NewTokenSwap(ethereumTxHashLowercase, ethereumSender, receiver, amountUscrtCoins)
+	// Register the swap as started
+	store.Set(tokenSwap.BurnTxHash.Bytes(), k.cdc.MustMarshalBinaryBare(tokenSwap))
 
 	// Mint new uSCRTs
-	err = k.supplyKeeper.MintCoins(
+	err := k.supplyKeeper.MintCoins(
 		ctx,
 		types.ModuleName,
 		tokenSwap.AmountUSCRT,
@@ -100,30 +97,27 @@ func (k Keeper) ProcessTokenSwapRequest(ctx sdk.Context, ethereumTxHash string, 
 		return err
 	}
 
-	// Store the token swap request in our state
-	// We need this to verify we process each request only once
-	store := ctx.KVStore(k.storeKey)
-	store.Set([]byte(tokenSwap.EthereumTxHash), k.cdc.MustMarshalBinaryBare(tokenSwap))
+	tokenSwap.Done = true
+
+	//update the status of the swap as successful
+	store.Set(tokenSwap.BurnTxHash.Bytes(), k.cdc.MustMarshalBinaryBare(tokenSwap))
 
 	return nil
 }
 
 // GetPastTokenSwapRequest retrives a past token swap request
-func (k Keeper) GetPastTokenSwapRequest(ctx sdk.Context, ethereumTxHash string) (types.TokenSwap, error) {
+func (k Keeper) GetPastTokenSwapRequest(ctx sdk.Context, ethereumTxHash types.EthereumTxHash) (types.TokenSwapRecord, error) {
 	store := ctx.KVStore(k.storeKey)
 
-	// Lowercase ethereumTxHash as this is our indexed field
-	ethereumTxHashLowercase := strings.ToLower(ethereumTxHash)
-
-	if !store.Has([]byte(ethereumTxHashLowercase)) {
-		return types.TokenSwap{}, sdkerrors.Wrap(
+	if !store.Has(ethereumTxHash.Bytes()) {
+		return types.TokenSwapRecord{}, sdkerrors.Wrap(
 			sdkerrors.ErrUnknownRequest,
-			"Unknown Ethereum tx hash "+ethereumTxHash)
+			"Unknown Ethereum tx hash: "+ethereumTxHash.String())
 
 	}
 
-	bz := store.Get([]byte(ethereumTxHashLowercase))
-	var tokenSwap types.TokenSwap
+	bz := store.Get(ethereumTxHash.Bytes())
+	var tokenSwap types.TokenSwapRecord
 	k.cdc.MustUnmarshalBinaryBare(bz, &tokenSwap)
 
 	return tokenSwap, nil
