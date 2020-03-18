@@ -124,7 +124,7 @@ type EnigmaChainApp struct {
 	upgradeKeeper   upgrade.Keeper
 	evidenceKeeper  evidence.Keeper
 	computeKeeper   compute.Keeper
-	tokenSwapKeeper tokenswap.Keeper
+	tokenSwapKeeper tokenswap.SwapKeeper
 	// the module manager
 	mm *module.Manager
 

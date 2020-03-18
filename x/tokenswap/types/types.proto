@@ -1,4 +1,4 @@
-// NOTE: Just wanted to play around with the protobuf syntax/scripts. Not necessarily going to use it
+// NOTE: Just wanted to play around with the protobuf syntax/scripts. Not going to use it
 
 
 syntax = "proto3";

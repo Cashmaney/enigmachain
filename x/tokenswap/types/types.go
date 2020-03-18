@@ -25,7 +25,7 @@ type TokenSwapRecord struct {
 	BurnTxHash     EthereumTxHash  `json:"ethereum_tx_hash" yaml:"ethereum_tx_hash"`
 	EthereumSender EthereumAddress `json:"ethereum_sender" yaml:"ethereum_sender"`
 	Receiver       sdk.AccAddress  `json:"receiver" yaml:"receiver"`
-	AmountUSCRT    sdk.Coin        `json:"amount_uscrt" yaml:"amount_uscrt"`
+	AmountUSCRT    sdk.Coins       `json:"amount_uscrt" yaml:"amount_uscrt"`
 	Done           bool            `json:"done" yaml:"done"`
 }
 
@@ -37,7 +37,7 @@ type Params struct {
 }
 
 // NewTokenSwap Returns a new TokenSwap
-func NewTokenSwapRecord(burnTxHash EthereumTxHash, ethereumSender EthereumAddress, receiver sdk.AccAddress, AmountUSCRT sdk.Coin, done bool) TokenSwapRecord {
+func NewTokenSwapRecord(burnTxHash EthereumTxHash, ethereumSender EthereumAddress, receiver sdk.AccAddress, AmountUSCRT sdk.Coins, done bool) TokenSwapRecord {
 	return TokenSwapRecord{
 		BurnTxHash:     burnTxHash,
 		EthereumSender: ethereumSender,

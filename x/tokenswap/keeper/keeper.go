@@ -52,13 +52,13 @@ func (k Keeper) ValidateTokenSwapSigner(ctx sdk.Context, signer sdk.AccAddress) 
 	return nil
 }
 
-func (k Keeper) GetMintedCoin(ctx sdk.Context, amtEngDust sdk.Dec) sdk.Coin {
+func (k Keeper) GetMintedCoins(ctx sdk.Context, amtEngDust sdk.Dec) sdk.Coins {
 	// ENG has 8 decimals, and SCRT has 6, so we divide the number of ENG dust by 100
-	amountUscrt := amtEngDust.Mul(sdk.NewDecWithPrec(1, 2))
 	mintMultiplier := k.GetMintingMultiplier(ctx)
-	uscrtToMint := mintMultiplier.MulInt64(amountUscrt.Int64())
 
-	return sdk.NewCoin("uscrt", uscrtToMint.RoundInt())
+	c := sdk.NewDecCoins(sdk.NewDecCoin("uscrt", amtEngDust.RoundInt()))
+	coins, _ := c.MulDecTruncate(sdk.NewDecWithPrec(1, 2)).MulDecTruncate(mintMultiplier).TruncateDecimal()
+	return coins
 }
 
 // ProcessTokenSwapRequest processes a claim that has just completed successfully with consensus
@@ -69,7 +69,7 @@ func (k Keeper) ProcessTokenSwapRequest(
 	// We need this to verify we process each request only once
 	store := ctx.KVStore(k.storeKey)
 
-	uscrtCoin := k.GetMintedCoin(ctx, request.AmountENG)
+	uscrtCoin := k.GetMintedCoins(ctx, request.AmountENG)
 
 	tokenSwap := types.NewTokenSwapRecord(request.BurnTxHash, request.EthereumSender, request.Receiver, uscrtCoin, false)
 
@@ -80,7 +80,7 @@ func (k Keeper) ProcessTokenSwapRequest(
 	err := k.supplyKeeper.MintCoins(
 		ctx,
 		types.ModuleName,
-		sdk.NewCoins(tokenSwap.AmountUSCRT),
+		tokenSwap.AmountUSCRT,
 	)
 	if err != nil {
 		return err
@@ -91,7 +91,7 @@ func (k Keeper) ProcessTokenSwapRequest(
 		ctx,
 		types.ModuleName,
 		tokenSwap.Receiver,
-		sdk.NewCoins(tokenSwap.AmountUSCRT),
+		tokenSwap.AmountUSCRT,
 	)
 	if err != nil {
 		return err
