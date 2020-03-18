@@ -34,9 +34,13 @@ I added a handy dockerfile that runs an independent chain for easy testing/playi
 
 `docker build -f .\Dockerfile_build -t enigmachain .`    
 
+* run the container
+
+`docker run enigmachain --name enigmachain`
+
 * Open a shell
  
-`docker exec -it /bin/bash`
+`docker exec -it /bin/bash enigmachain`
 
 * Show the random seed accounts:
 
@@ -70,3 +74,50 @@ Example to create 1 SCRT:
 
 Check out the CLI docs at 
 https://github.com/cosmos/gaia/blob/master/docs/resources/gaiacli.md 
+
+### Other Useful Usage commands and stuff:
+
+```{
+  "name": "t1",
+  "type": "local",
+  "address": "enigma1daq9t2mp8vwtta2sd2demc6pyhf8zwstjhfrxw",
+  "pubkey": "enigmapub1addwnpepqfwzdealtjqf462ehckyku0h34qqq5p7hghlsxwxq3738gfx5rujuy89zj6",
+  "mnemonic": "zero sun wheel arm boss retire truth crack program fire hazard silver pattern crater example almost hub bounce brown act dumb auto arrow smart"
+}
+
+{
+  "name": "t2",
+  "type": "local",
+  "address": "enigma1yuth8vrhemuu5m0ps0lv75yjhc9t86tf9hf83z",
+  "pubkey": "enigmapub1addwnpepqwl0nwldws4yzk3j7m8xk9kn5xl9ca5r756njmvewe0q7ahypckevnp7ng0",
+  "mnemonic": "leisure possible ten thunder wild master hat rebuild denial unknown deny mutual gas upper measure aware book cancel spray ankle divorce side deposit stumble"
+}
+
+{
+  "name": "t3",
+  "type": "local",
+  "address": "enigma1ee00mr20zqhmvv2pg7th2u4eg2pxpzn7tf0rz2",
+  "pubkey": "enigmapub1addwnpepqgas7mdn265t36eq7jq3c6p2spp2jsu6a70jrgv6y3f6zylwelk37kqka5c",
+  "mnemonic": "mother water cotton gun gun nation blast dilemma citizen swear lady magnet churn pattern lava fog original injury riot deputy panda hedgehog scissors seat"
+}
+
+{
+"name": "multitest1",
+"type": "multi",
+"address": "enigma1n4pc2w3us9n4axa0ppadd3kv3c0sar8c4ju6k7",
+"pubkey": "enigmapub1ytql0csgqgfzd666axrjzqa7lxa76ap2g9dr9akwdvtd8gd7t3mg8af489kejaj7pamwgr3djcfzd666axrjzqjuymnm7hyqnt54n03vfdcl0r2qqpgraw30lqvuvprazwsjdg8e9cfzd666axrjzq3mpakmx44ghr4jpaypr35z4qzz49pe4mulyxse5fzn5yf7anldrutcu62m"        
+},
+	
+enigmacli keys add t1 --recover <recover using the t1 mnemonic>
+enigmacli keys add t2 --recover <recover using the t2 mnemonic>
+enigmacli keys add rt3 --pubkey=enigmapub1addwnpepqgas7mdn265t36eq7jq3c6p2spp2jsu6a70jrgv6y3f6zylwelk37kqka5c
+enigmacli keys add smt1 --multisig=t1,t2,rt3 --multisig-threshold 2
+
+enigmacli tx tokenswap create 0xaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa 0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb 10 enigma1yuth8vrhemuu5m0ps0lv75yjhc9t86tf9hf83z --from=enigma1n4pc2w3us9n4axa0ppadd3kv3c0sar8c4ju6k7 --generate-only > unsigned.json
+
+enigmacli tx sign unsigned.json --multisig enigma1n4pc2w3us9n4axa0ppadd3kv3c0sar8c4ju6k7 --from=t1 --output-document p1.json
+enigmacli tx sign unsigned.json --multisig enigma1n4pc2w3us9n4axa0ppadd3kv3c0sar8c4ju6k7 --from=t2 --output-document p2.json
+
+enigmacli tx multisign unsigned.json smt1 p1.json p2.json > signed.json
+
+enigmacli tx broadcast signed.json```
