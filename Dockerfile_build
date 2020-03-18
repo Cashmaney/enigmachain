@@ -48,6 +48,7 @@ COPY --from=build-env /go/src/github.com/enigmampc/enigmablockchain/enigmad /usr
 COPY --from=build-env  /go/src/github.com/enigmampc/enigmablockchain/enigmacli /usr/bin/enigmacli
 
 COPY ./packaging_docker/chain_init.sh .
+COPY ./packaging_docker/signed_swap_tx.json .
 
 RUN chmod +x /usr/bin/enigmad
 RUN chmod +x /usr/bin/enigmacli
