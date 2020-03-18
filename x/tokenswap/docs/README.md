@@ -120,4 +120,5 @@ enigmacli tx sign unsigned.json --multisig enigma1n4pc2w3us9n4axa0ppadd3kv3c0sar
 
 enigmacli tx multisign unsigned.json smt1 p1.json p2.json > signed.json
 
-enigmacli tx broadcast signed.json```
+enigmacli tx broadcast signed.json
+```
