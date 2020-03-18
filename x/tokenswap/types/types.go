@@ -21,35 +21,38 @@ const (
 )
 
 // TokenSwap struct containing the data of the TokenSwap. json and yaml tags are used to specify field names when marshalled
-type TokenSwap struct {
-	EthereumTxHash string         `json:"ethereum_tx_hash" yaml:"ethereum_tx_hash"`
+type TokenSwapRecord struct {
+	BurnTxHash     string         `json:"ethereum_tx_hash" yaml:"ethereum_tx_hash"`
 	EthereumSender string         `json:"ethereum_sender" yaml:"ethereum_sender"`
 	Receiver       sdk.AccAddress `json:"receiver" yaml:"receiver"`
-	AmountUSCRT    sdk.Coins      `json:"amount_uscrt" yaml:"amount_uscrt"`
+	AmountUSCRT    sdk.Coin       `json:"amount_uscrt" yaml:"amount_uscrt"`
+	Done           bool           `json:"done" yaml:"done"`
 }
 
 // TokenSwap struct containing the data of the TokenSwap. json and yaml tags are used to specify field names when marshalled
 type Params struct {
 	MultisigApproveAddress sdk.AccAddress `json:"minting_approver_address" yaml:"minting_approver_address"`
-	MintingMultiple        sdk.Dec        `json:"minting_multiple" yaml:"minting_multiple"`
+	MintingMultiplier      sdk.Dec        `json:"minting_multiplier" yaml:"minting_multiplier"`
 	MintingEnabled         bool           `json:"minting_enabled" yaml:"minting_enabled"`
 }
 
 // NewTokenSwap Returns a new TokenSwap
-func NewTokenSwap(ethereumTxHash string, ethereumSender string, receiver sdk.AccAddress, AmountUSCRT sdk.Coins) TokenSwap {
-	return TokenSwap{
-		EthereumTxHash: ethereumTxHash,
+func NewTokenSwapRecord(burnTxHash string, ethereumSender string, receiver sdk.AccAddress, AmountUSCRT sdk.Coin, done bool) TokenSwapRecord {
+	ethereumTxHashLowercase := strings.ToLower(burnTxHash)
+	return TokenSwapRecord{
+		BurnTxHash:     ethereumTxHashLowercase,
 		EthereumSender: ethereumSender,
 		Receiver:       receiver,
 		AmountUSCRT:    AmountUSCRT,
+		Done:           done,
 	}
 }
 
 // String implement fmt.Stringer
-func (s TokenSwap) String() string {
+func (s TokenSwapRecord) String() string {
 	return strings.TrimSpace(
 		fmt.Sprintf(`EthereumTxHash=%s EthereumSender=%s Receiver=%s Amount=%s`,
-			s.EthereumTxHash,
+			s.BurnTxHash,
 			s.EthereumSender,
 			s.Receiver.String(),
 			s.AmountUSCRT.String(),

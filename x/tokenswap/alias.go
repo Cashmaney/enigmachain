@@ -15,18 +15,23 @@ const (
 
 // functions aliases
 var (
-	ModuleCdc             = types.ModuleCdc
-	RegisterCodec         = types.RegisterCodec
-	NewKeeper             = keeper.NewKeeper
-	NewQuerier            = keeper.NewQuerier
-	NewTokenSwap          = types.NewTokenSwap
-	NewMsgTokenSwap       = types.NewMsgTokenSwap
-	NewGetTokenSwapParams = types.NewGetTokenSwapParams
+	ModuleCdc           = types.ModuleCdc
+	RegisterCodec       = types.RegisterCodec
+	NewKeeper           = keeper.NewKeeper
+	NewQuerier          = keeper.NewQuerier
+	DefaultGenesisState = types.DefaultGenesisState
+	NewGenesisState     = types.NewGenesisState
+	// NewTokenSwap          = types.NewS
+	// NewMsgTokenSwap       = types.NewMsgSwapRequest
+	// NewGetTokenSwapParams = types.NewGetTokenSwapParams
 )
 
 type (
-	Keeper                 = keeper.Keeper
-	TokenSwap              = types.TokenSwap
-	MsgTokenSwap           = types.MsgTokenSwap
+	GenesisState           = types.GenesisState
+	SwapKeeper             = keeper.Keeper
+	SupplyKeeper           = types.SupplyKeeper
+	AccountKeeper          = types.AccountKeeper
+	SwapRecord             = types.TokenSwapRecord
+	MsgSwapRequest         = types.MsgSwapRequest
 	QueryEthProphecyParams = types.GetTokenSwapParams
 )

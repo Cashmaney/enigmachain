@@ -3,18 +3,16 @@ package tokenswap
 import (
 	"fmt"
 
-	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap/types"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewHandler returns a handler for "tokenswap" type messages.
-func NewHandler(keeper Keeper) sdk.Handler {
+func NewHandler(keeper SwapKeeper) sdk.Handler {
 	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		switch msg := msg.(type) {
-		case types.MsgTokenSwap:
+		case MsgSwapRequest:
 			return handleMsgTokenSwap(ctx, keeper, msg)
 		default:
 			errMsg := fmt.Sprintf("unrecognized tokenswap message type: %v", msg.Type())
@@ -25,7 +23,7 @@ func NewHandler(keeper Keeper) sdk.Handler {
 
 // Handle a message to create a token swap
 func handleMsgTokenSwap(
-	ctx sdk.Context, keeper Keeper, msg types.MsgTokenSwap,
+	ctx sdk.Context, keeper SwapKeeper, msg MsgSwapRequest,
 ) (*sdk.Result, error) {
 
 	err := keeper.SwapIsEnabled(ctx)
@@ -46,22 +44,26 @@ func handleMsgTokenSwap(
 	}
 
 	// Check if the this tokeswap request was alread processed
-	_, err = keeper.GetPastTokenSwapRequest(ctx, msg.EthereumTxHash)
+	swapRecord, err := keeper.GetPastTokenSwapRequest(ctx, msg.BurnTxHash)
 	if err == nil {
 		// msg.EthereumTxHash already exists in db
 		// So this request was already processed
-		return nil, sdkerrors.Wrap(
-			sdkerrors.ErrUnauthorized,
-			fmt.Sprintf(
-				"TokenSwap with EthereumTxHash %s was already processed",
-				msg.EthereumTxHash,
-			),
-		)
+
+		// Check if we might have failed processing the transaction
+		if swapRecord.Done {
+			return nil, sdkerrors.Wrap(
+				sdkerrors.ErrUnauthorized,
+				fmt.Sprintf(
+					"TokenSwap with EthereumTxHash %s was already processed",
+					msg.BurnTxHash,
+				),
+			)
+		}
 	}
 
 	err = keeper.ProcessTokenSwapRequest(
 		ctx,
-		msg.EthereumTxHash,
+		msg.BurnTxHash,
 		msg.EthereumSender,
 		msg.Receiver,
 		msg.AmountENG,

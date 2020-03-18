@@ -17,7 +17,7 @@ const (
 // Parameter keys
 var (
 	ParamStoreKeyMultisigApproveAddress = []byte("MultisigApproveAddress")
-	ParamStoreKeyMintingMultiple        = []byte("MintingMultiple")
+	ParamStoreKeyMintingMultiplier      = []byte("MintingMultiplier")
 	ParamStoreKeyMintingEnabled         = []byte("MintingEnabled")
 )
 
@@ -32,8 +32,8 @@ func DefaultParams() Params {
 	multisigAddress, _ := sdk.AccAddressFromBech32(addrString)
 	return Params{
 		MultisigApproveAddress: multisigAddress,
-		MintingMultiple:        sdk.NewDec(1),
-		MintingEnabled:         true,
+		MintingMultiplier:      sdk.NewDec(1),
+		MintingEnabled:         true, // for testing only. turn this off before deployment, duh:)
 	}
 }
 
@@ -46,16 +46,16 @@ func (p Params) String() string {
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
 		paramtypes.NewParamSetPair(ParamStoreKeyMultisigApproveAddress, &p.MultisigApproveAddress, validateMultisigApproveAddress),
-		paramtypes.NewParamSetPair(ParamStoreKeyMintingMultiple, &p.MintingMultiple, validateMintingMultiple),
+		paramtypes.NewParamSetPair(ParamStoreKeyMintingMultiplier, &p.MintingMultiplier, validateMintingMultiple),
 		paramtypes.NewParamSetPair(ParamStoreKeyMintingEnabled, &p.MintingEnabled, validateMintingEnabled),
 	}
 }
 
 // ValidateBasic performs basic validation on distribution parameters.
 func (p Params) ValidateBasic() error {
-	if p.MintingMultiple.IsNegative() || p.MintingMultiple.IsNil() {
+	if p.MintingMultiplier.IsNegative() || p.MintingMultiplier.IsNil() {
 		return fmt.Errorf(
-			"minting multiple should non-negative and greater than 0: %s", p.MintingMultiple,
+			"minting multiple should non-negative and greater than 0: %s", p.MintingMultiplier,
 		)
 	}
 	return nil
@@ -80,7 +80,7 @@ func validateMintingMultiple(i interface{}) error {
 	if v.IsNegative() {
 		return fmt.Errorf("base proposer reward must be positive: %s", v)
 	}
-	if v.GT(sdk.OneDec()) {
+	if v.GT(sdk.NewDec(10)) {
 		return fmt.Errorf("base proposer reward too large: %s", v)
 	}
 	return nil

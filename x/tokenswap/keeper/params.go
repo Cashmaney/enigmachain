@@ -14,8 +14,6 @@ func (k Keeper) GetParams(ctx sdk.Context) (params types.Params) {
 // SetParams sets the distribution parameters to the param space.
 func (k Keeper) SetParams(ctx sdk.Context, params types.Params) {
 	k.paramSpace.SetParamSet(ctx, &params)
-	//addr := k.GetMultisigApproveAddress(ctx)
-	//_ = k.SetOnlyAllowedSigner(ctx, addr.String())
 }
 
 // GetCommunityTax returns the current distribution community tax.
@@ -25,8 +23,8 @@ func (k Keeper) GetMultisigApproveAddress(ctx sdk.Context) (addr sdk.AccAddress)
 }
 
 // GetBaseProposerReward returns the current distribution base proposer rate.
-func (k Keeper) GetMintingMultiple(ctx sdk.Context) (percent sdk.Dec) {
-	k.paramSpace.Get(ctx, types.ParamStoreKeyMintingMultiple, &percent)
+func (k Keeper) GetMintingMultiplier(ctx sdk.Context) (percent sdk.Dec) {
+	k.paramSpace.Get(ctx, types.ParamStoreKeyMintingMultiplier, &percent)
 	return percent
 }
 

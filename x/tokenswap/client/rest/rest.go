@@ -101,7 +101,7 @@ func createTokenSwapHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		msg := types.NewMsgTokenSwap(
+		msg := types.NewMsgSwapRequest(
 			ethereumTxHash,
 			ethereumSender,
 			receiver,

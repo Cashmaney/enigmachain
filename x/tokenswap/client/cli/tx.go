@@ -35,7 +35,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			msg := types.NewMsgTokenSwap(
+			msg := types.NewMsgSwapRequest(
 				ethereumTxHash,
 				ethereumSender,
 				receiver,
