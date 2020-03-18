@@ -77,7 +77,8 @@ https://github.com/cosmos/gaia/blob/master/docs/resources/gaiacli.md
 
 ### Other Useful Usage commands and stuff:
 
-```{
+```
+{
   "name": "t1",
   "type": "local",
   "address": "enigma1daq9t2mp8vwtta2sd2demc6pyhf8zwstjhfrxw",
