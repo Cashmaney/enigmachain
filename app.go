@@ -43,10 +43,10 @@ const appName = "enigma"
 
 var (
 	// DefaultCLIHome default home directories for the application CLI
-	DefaultCLIHome = os.ExpandEnv("$HOME/.enigmacli")
+	DefaultCLIHome = os.ExpandEnv("$HOME/.kamutcli")
 
 	// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-	DefaultNodeHome = os.ExpandEnv("$HOME/.enigmad")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.kamutd")
 
 	// ModuleBasics The module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
