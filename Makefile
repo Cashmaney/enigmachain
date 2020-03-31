@@ -90,7 +90,7 @@ build_macos:
 
 build_all: build_linux build_windows build_macos
 
-deb: build_local
+deb: build_local_no_rust
     ifneq ($(UNAME_S),Linux)
 		exit 1
     endif
