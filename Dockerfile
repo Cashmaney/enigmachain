@@ -16,7 +16,7 @@ WORKDIR /go/src/github.com/enigmampc/enigmablockchain
 # Add source files
 COPY . .
 
-RUN make build_local
+RUN make build_local_no_rust
 
 # Final image
 FROM alpine:edge
