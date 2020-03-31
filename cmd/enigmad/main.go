@@ -19,8 +19,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
-	app "github.com/enigmampc/EnigmaBlockchain"
-	eng "github.com/enigmampc/EnigmaBlockchain/types"
+	app "github.com/chainofsecrets/KamutBlockchain"
+	eng "github.com/chainofsecrets/KamutBlockchain/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
@@ -42,8 +42,8 @@ func main() {
 	ctx := server.NewDefaultContext()
 	cobra.EnableCommandSorting = false
 	rootCmd := &cobra.Command{
-		Use:               "enigmad",
-		Short:             "EnigmaChain App Daemon (server)",
+		Use:               "kamutd",
+		Short:             "Kamut Blockchain App Daemon (server)",
 		PersistentPreRunE: server.PersistentPreRunEFn(ctx),
 	}
 	// CLI commands to initialize the chain
