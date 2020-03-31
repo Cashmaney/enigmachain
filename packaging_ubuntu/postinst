@@ -3,14 +3,14 @@
 
 set -e
 
-cat <<EOF > /etc/systemd/system/enigma-node.service
+cat <<EOF > /etc/systemd/system/kamut-node.service
 [Unit]
 Description=Enigma node service
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=$(which enigmad) start
+ExecStart=$(which kamutd) start
 User=$(logname)
 Restart=always
 StartLimitInterval=0

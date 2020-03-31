@@ -40,8 +40,8 @@ comma := ,
 build_tags_comma_sep := $(subst $(whitespace),$(comma),$(build_tags))
 
 ldflags = -X github.com/cosmos/cosmos-sdk/version.Name=EnigmaBlockchain \
-	-X github.com/cosmos/cosmos-sdk/version.ServerName=enigmad \
-	-X github.com/cosmos/cosmos-sdk/version.ClientName=enigmacli \
+	-X github.com/cosmos/cosmos-sdk/version.ServerName=kamutd \
+	-X github.com/cosmos/cosmos-sdk/version.ClientName=kamutcli \
 	-X github.com/cosmos/cosmos-sdk/version.Version=$(VERSION) \
 	-X github.com/cosmos/cosmos-sdk/version.Commit=$(COMMIT) \
 	-X "github.com/cosmos/cosmos-sdk/version.BuildTags=$(build_tags)"
@@ -70,8 +70,13 @@ build_local:
 	cd go-cosmwasm && rustup run nightly cargo build --release --features backtraces
 	cp go-cosmwasm/target/release/libgo_cosmwasm.so go-cosmwasm/api
 	@ #this pulls out ELF symbols, 80% size reduction!
-	go build -mod=readonly $(BUILD_FLAGS) ./cmd/enigmad
-	go build -mod=readonly $(BUILD_FLAGS) ./cmd/enigmacli
+	go build -mod=readonly $(BUILD_FLAGS) ./cmd/kamutd
+	go build -mod=readonly $(BUILD_FLAGS) ./cmd/kamutcli
+
+build_local_no_rust:
+	@ #this pulls out ELF symbols, 80% size reduction!
+	go build -mod=readonly $(BUILD_FLAGS) ./cmd/kamutd
+	go build -mod=readonly $(BUILD_FLAGS) ./cmd/kamutcli
 
 build_linux: build_local
 
@@ -85,16 +90,16 @@ build_macos:
 
 build_all: build_linux build_windows build_macos
 
-deb: build_local
+deb: build_local_no_rust
     ifneq ($(UNAME_S),Linux)
 		exit 1
     endif
 	rm -rf /tmp/EnigmaBlockchain
 	
 	mkdir -p /tmp/EnigmaBlockchain/deb/bin
-	mv -f ./enigmacli /tmp/EnigmaBlockchain/deb/bin/enigmacli
-	mv -f ./enigmad /tmp/EnigmaBlockchain/deb/bin/enigmad
-	chmod +x /tmp/EnigmaBlockchain/deb/bin/enigmad /tmp/EnigmaBlockchain/deb/bin/enigmacli
+	mv -f ./kamutcli /tmp/EnigmaBlockchain/deb/bin/kamutcli
+	mv -f ./kamutd /tmp/EnigmaBlockchain/deb/bin/kamutd
+	chmod +x /tmp/EnigmaBlockchain/deb/bin/kamutd /tmp/EnigmaBlockchain/deb/bin/kamutcli
 	
 	mkdir -p /tmp/EnigmaBlockchain/deb/usr/lib
 	mv -f ./go-cosmwasm/api/libgo_cosmwasm.so /tmp/EnigmaBlockchain/deb/usr/lib/libgo_cosmwasm.so

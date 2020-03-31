@@ -3,3 +3,5 @@ docs
 
 README.md
 .gitignore
+
+**/target

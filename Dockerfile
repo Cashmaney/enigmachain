@@ -16,7 +16,7 @@ WORKDIR /go/src/github.com/enigmampc/enigmablockchain
 # Add source files
 COPY . .
 
-RUN make build_local
+RUN make build_local_no_rust
 
 # Final image
 FROM alpine:edge
@@ -29,16 +29,16 @@ WORKDIR /root
 # CMD ["/bin/bash"]
 
 # Copy over binaries from the build-env
-COPY --from=build-env /go/src/github.com/enigmampc/enigmablockchain/enigmad /usr/bin/enigmad
-COPY --from=build-env  /go/src/github.com/enigmampc/enigmablockchain/enigmacli /usr/bin/enigmacli
+COPY --from=build-env /go/src/github.com/enigmampc/enigmablockchain/kamutd /usr/bin/kamutd
+COPY --from=build-env  /go/src/github.com/enigmampc/enigmablockchain/kamutcli /usr/bin/kamutcli
 
 COPY ./packaging_docker/docker_start.sh .
 
-RUN chmod +x /usr/bin/enigmad
-RUN chmod +x /usr/bin/enigmacli
+RUN chmod +x /usr/bin/kamutd
+RUN chmod +x /usr/bin/kamutcli
 RUN chmod +x docker_start.sh .
-# Run enigmad by default, omit entrypoint to ease using container with enigmacli
-#CMD ["/root/enigmad"]
+# Run kamutd by default, omit entrypoint to ease using container with kamutcli
+#CMD ["/root/kamutd"]
 
 ####### STAGE 1 -- build core
 ARG moniker=default

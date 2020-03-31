@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/chainofsecrets/KamutBlockchain/types/util"
+	"github.com/enigmachain/EnigmaBlockChain/types/util"
 )
 
 // Aliases for internal types

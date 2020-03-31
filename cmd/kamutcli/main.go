@@ -22,9 +22,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
-	
-	app "github.com/chainofsecrets/KamutBlockchain"
-	eng "github.com/chainofsecrets/KamutBlockchain/types"
+
+	app "github.com/enigmachain/EnigmaBlockChain"
+	eng "github.com/enigmachain/EnigmaBlockChain/types"
 )
 
 func main() {

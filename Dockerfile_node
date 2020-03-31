@@ -1,0 +1,57 @@
+# Simple usage with a mounted data directory:
+# > docker build -t enigma .
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.kamutd:/root/.kamutd -v ~/.kamutcli:/root/.kamutcli enigma kamutd init
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.kamutd:/root/.kamutd -v ~/.kamutcli:/root/.kamutcli enigma kamutd start
+FROM rust:1.42-stretch AS build-env-rust
+
+# Set working directory for the build
+WORKDIR /go/src/github.com/enigmampc/enigmablockchain
+
+RUN rustup default nightly
+
+# Add source files
+COPY go-cosmwasm/ go-cosmwasm/
+
+WORKDIR /go/src/github.com/enigmampc/enigmablockchain/go-cosmwasm
+RUN cargo build --release --features backtraces
+
+FROM golang:1.14-stretch AS build-env
+
+# Set up dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    make \
+    git && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set working directory for the build
+WORKDIR /go/src/github.com/enigmampc/enigmablockchain
+
+# Add source files
+COPY . .
+
+COPY --from=build-env-rust /go/src/github.com/enigmampc/enigmablockchain/go-cosmwasm/target/release/libgo_cosmwasm.so go-cosmwasm/api
+
+RUN go mod tidy
+
+RUN make build_local_no_rust
+
+# Final image
+FROM ubuntu:18.04
+
+# Install ca-certificates
+WORKDIR /root
+
+# Copy over binaries from the build-env
+COPY --from=build-env-rust /go/src/github.com/enigmampc/enigmablockchain/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
+COPY --from=build-env /go/src/github.com/enigmampc/enigmablockchain/kamutd /usr/bin/kamutd
+COPY --from=build-env  /go/src/github.com/enigmampc/enigmablockchain/kamutcli /usr/bin/kamutcli
+
+COPY ./packaging_docker/chain_init.sh .
+COPY ./packaging_docker/signed_swap_tx.json .
+
+RUN chmod +x /usr/bin/kamutd
+RUN chmod +x /usr/bin/kamutcli
+
+# Run kamutd by default, omit entrypoint to ease using container with kamutcli
+ENTRYPOINT ["/bin/bash"]
