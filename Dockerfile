@@ -41,14 +41,14 @@ RUN chmod +x docker_start.sh .
 #CMD ["/root/enigmad"]
 
 ####### STAGE 1 -- build core
-ARG moniker=default
-ARG chainid=enigma-1
-ARG genesis_path=https://raw.githubusercontent.com/enigmampc/EnigmaBlockchain/master/enigma-1-genesis.json
-ARG persistent_peers=201cff36d13c6352acfc4a373b60e83211cd3102@bootstrap.mainnet.enigma.co:26656
+ARG MONIKER=default
+ARG CHAINID=enigma-1
+ARG GENESISPATH=https://raw.githubusercontent.com/enigmampc/EnigmaBlockchain/master/enigma-1-genesis.json
+ARG PERSISTENT_PEERS=201cff36d13c6352acfc4a373b60e83211cd3102@bootstrap.mainnet.enigma.co:26656
 
-ENV GENESISPATH=$genesis_path
-ENV CHAINID=$chainid
-ENV MONIKER=$moniker
-ENV PERSISTENT_PEERS=$persistent_peers
+ENV GENESISPATH="${GENESISPATH}"
+ENV CHAINID="${CHAINID}"
+ENV MONIKER="${MONIKER}"
+ENV PERSISTENT_PEERS="${PERSISTENT_PEERS}"
 
 ENTRYPOINT ["/bin/ash", "docker_start.sh"]
