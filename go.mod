@@ -1,4 +1,4 @@
-module github.com/enigmampc/EnigmaBlockchain
+module github.com/chainofsecrets/KamutBlockchain/
 
 go 1.13
 
