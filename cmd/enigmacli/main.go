@@ -22,9 +22,9 @@ import (
 	"github.com/spf13/viper"
 	"github.com/tendermint/go-amino"
 	"github.com/tendermint/tendermint/libs/cli"
-
-	app "github.com/enigmampc/EnigmaBlockchain"
-	eng "github.com/enigmampc/EnigmaBlockchain/types"
+	
+	app "github.com/chainofsecrets/KamutBlockchain"
+	eng "github.com/chainofsecrets/KamutBlockchain/types"
 )
 
 func main() {
@@ -40,8 +40,8 @@ func main() {
 	config.Seal()
 
 	rootCmd := &cobra.Command{
-		Use:   "enigmacli",
-		Short: "EnigmaChain Client",
+		Use:   "kamutcli",
+		Short: "Kamut Blockchain Client",
 	}
 
 	// Add --chain-id to persistent flags and mark it required
