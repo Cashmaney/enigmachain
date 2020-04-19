@@ -37,7 +37,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 				return err
 			}
 
-			amt, err := strconv.ParseInt(args[2], 10, 32)
+			amt, err := strconv.ParseInt(args[2], 10, 64)
 			if err != nil {
 				return errors.New("amount must be an integer (no decimal funny-business!)")
 			}
