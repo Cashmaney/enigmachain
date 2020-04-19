@@ -97,7 +97,7 @@ func createTokenSwapHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			return
 		}
 
-		amt, err := strconv.ParseInt(req.AmountENG, 10, 32)
+		amt, err := strconv.ParseInt(req.AmountENG, 10, 64)
 		if err != nil {
 			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
 			return
