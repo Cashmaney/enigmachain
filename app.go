@@ -2,13 +2,20 @@ package app
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
+	tmtypes "github.com/tendermint/tendermint/types"
+
+	//"github.com/cosmos/cosmos-sdk/x/evidence"
+	//"github.com/cosmos/cosmos-sdk/x/upgrade"
+
 	//"github.com/enigmampc/EnigmaBlockchain/x/compute"
 	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap"
+
 	abci "github.com/tendermint/tendermint/abci/types"
+	cmn "github.com/tendermint/tendermint/libs/common"
 	"github.com/tendermint/tendermint/libs/log"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+
 	"io"
 	"os"
 
@@ -19,11 +26,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
-	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting"
+	//authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
+	//"github.com/cosmos/cosmos-sdk/x/evidence"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
@@ -32,8 +39,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	"github.com/cosmos/cosmos-sdk/x/supply"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
+	//"github.com/cosmos/cosmos-sdk/x/upgrade"
+	//upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 )
 
 const appName = "enigma"
@@ -49,20 +56,22 @@ var (
 	// non-dependant module elements, such as codec registration
 	// and genesis verification.
 	ModuleBasics = module.NewBasicManager(
+		genaccounts.AppModuleBasic{},
 		genutil.AppModuleBasic{},
 		auth.AppModuleBasic{},
 		bank.AppModuleBasic{},
 		staking.AppModuleBasic{},
 		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
-		gov.NewAppModuleBasic(paramsclient.ProposalHandler, distr.ProposalHandler, upgradeclient.ProposalHandler),
+		gov.NewAppModuleBasic(paramsclient.ProposalHandler, distr.ProposalHandler),
+		// upgradeclient.ProposalHandler
 		params.AppModuleBasic{},
 		//compute.AppModuleBasic{},
 		crisis.AppModuleBasic{},
 		slashing.AppModuleBasic{},
 		supply.AppModuleBasic{},
-		upgrade.AppModuleBasic{},
-		evidence.AppModuleBasic{},
+		//upgrade.AppModuleBasic{},
+		//evidence.AppModuleBasic{},
 		tokenswap.AppModuleBasic{},
 	)
 
@@ -87,13 +96,13 @@ func MakeCodec() *codec.Codec {
 	sdk.RegisterCodec(cdc)
 	codec.RegisterCrypto(cdc)
 	codec.RegisterEvidences(cdc)
-	authvesting.RegisterCodec(cdc)
+	// auth..RegisterCodec(cdc)
 
 	return cdc.Seal()
 }
 
 // Verify app interface at compile time
-var _ simapp.App = (*EnigmaChainApp)(nil)
+// var _ simapp.App = (*EnigmaChainApp)(nil)
 
 // EnigmaChainApp extended ABCI application
 type EnigmaChainApp struct {
@@ -117,15 +126,15 @@ type EnigmaChainApp struct {
 	govKeeper      gov.Keeper
 	crisisKeeper   crisis.Keeper
 	paramsKeeper   params.Keeper
-	upgradeKeeper  upgrade.Keeper
-	evidenceKeeper evidence.Keeper
+	//upgradeKeeper  upgrade.Keeper
+	//evidenceKeeper evidence.Keeper
 	//computeKeeper   compute.Keeper
 	tokenSwapKeeper tokenswap.SwapKeeper
 	// the module manager
 	mm *module.Manager
 
 	// simulation manager
-	sm *module.SimulationManager
+	//sm *module.SimulationManager
 }
 
 // WasmWrapper allows us to use namespacing in the config file
@@ -141,7 +150,7 @@ func NewEnigmaChainApp(
 	traceStore io.Writer,
 	loadLatest bool,
 	invCheckPeriod uint,
-	skipUpgradeHeights map[int64]bool,
+	// skipUpgradeHeights map[int64]bool,
 	baseAppOptions ...func(*bam.BaseApp),
 ) *EnigmaChainApp {
 
@@ -162,8 +171,8 @@ func NewEnigmaChainApp(
 		slashing.StoreKey,
 		gov.StoreKey,
 		params.StoreKey,
-		upgrade.StoreKey,
-		evidence.StoreKey,
+		//upgrade.StoreKey,
+		//evidence.StoreKey,
 		//compute.StoreKey,
 		tokenswap.StoreKey,
 	)
@@ -180,16 +189,16 @@ func NewEnigmaChainApp(
 	}
 
 	// The ParamsKeeper handles parameter storage for the application
-	app.paramsKeeper = params.NewKeeper(app.cdc, keys[params.StoreKey], tKeys[params.TStoreKey])
+	app.paramsKeeper = params.NewKeeper(app.cdc, keys[params.StoreKey], tKeys[params.TStoreKey], params.DefaultCodespace)
 	authSubspace := app.paramsKeeper.Subspace(auth.DefaultParamspace)
 	bankSupspace := app.paramsKeeper.Subspace(bank.DefaultParamspace)
 	stakingSubspace := app.paramsKeeper.Subspace(staking.DefaultParamspace)
 	mintSubspace := app.paramsKeeper.Subspace(mint.DefaultParamspace)
 	distrSubspace := app.paramsKeeper.Subspace(distr.DefaultParamspace)
 	slashingSubspace := app.paramsKeeper.Subspace(slashing.DefaultParamspace)
-	govSubspace := app.paramsKeeper.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
+	govSubspace := app.paramsKeeper.Subspace(gov.DefaultParamspace)
 	crisisSubspace := app.paramsKeeper.Subspace(crisis.DefaultParamspace)
-	evidenceSubspace := app.paramsKeeper.Subspace(evidence.DefaultParamspace)
+	//evidenceSubspace := app.paramsKeeper.Subspace(evidence.DefaultParamspace)
 	tokenswapSubspace := app.paramsKeeper.Subspace(tokenswap.DefaultParamspace)
 	// The AccountKeeper handles address -> account lookups
 	app.accountKeeper = auth.NewAccountKeeper(
@@ -202,6 +211,7 @@ func NewEnigmaChainApp(
 	app.bankKeeper = bank.NewBaseKeeper(
 		app.accountKeeper,
 		bankSupspace,
+		bank.DefaultCodespace,
 		app.ModuleAccountAddrs(),
 	)
 
@@ -218,8 +228,10 @@ func NewEnigmaChainApp(
 	stakingKeeper := staking.NewKeeper(
 		app.cdc,
 		keys[staking.StoreKey],
+		tKeys[staking.TStoreKey],
 		app.supplyKeeper,
 		stakingSubspace,
+		staking.DefaultCodespace,
 	)
 	app.mintKeeper = mint.NewKeeper(
 		app.cdc,
@@ -235,6 +247,7 @@ func NewEnigmaChainApp(
 		distrSubspace,
 		&stakingKeeper,
 		app.supplyKeeper,
+		distr.DefaultCodespace,
 		auth.FeeCollectorName,
 		app.ModuleAccountAddrs(),
 	)
@@ -243,22 +256,23 @@ func NewEnigmaChainApp(
 		keys[slashing.StoreKey],
 		&stakingKeeper,
 		slashingSubspace,
+		slashing.DefaultCodespace,
 	)
 	app.crisisKeeper = crisis.NewKeeper(
 		crisisSubspace, invCheckPeriod, app.supplyKeeper, auth.FeeCollectorName,
 	)
-	app.upgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], app.cdc)
+	//app.upgradeKeeper = upgrade.NewKeeper(skipUpgradeHeights, keys[upgrade.StoreKey], app.cdc)
 
 	// create evidence keeper with evidence router
-	evidenceKeeper := evidence.NewKeeper(
-		app.cdc, keys[evidence.StoreKey], evidenceSubspace, &stakingKeeper, app.slashingKeeper,
-	)
-	evidenceRouter := evidence.NewRouter()
+	//evidenceKeeper := evidence.NewKeeper(
+	//	app.cdc, keys[evidence.StoreKey], evidenceSubspace, &stakingKeeper, app.slashingKeeper,
+	//)
+	//evidenceRouter := evidence.NewRouter()
 
 	// TODO: register evidence routes
-	evidenceKeeper.SetRouter(evidenceRouter)
+	//evidenceKeeper.SetRouter(evidenceRouter)
 
-	app.evidenceKeeper = *evidenceKeeper
+	//app.evidenceKeeper = *evidenceKeeper
 
 	app.tokenSwapKeeper = tokenswap.NewKeeper(app.cdc, keys[tokenswap.StoreKey], tokenswapSubspace, app.supplyKeeper)
 	// just re-use the full router - do we want to limit this more?
@@ -280,11 +294,11 @@ func NewEnigmaChainApp(
 	govRouter := gov.NewRouter()
 	govRouter.AddRoute(gov.RouterKey, gov.ProposalHandler).
 		AddRoute(params.RouterKey, params.NewParamChangeProposalHandler(app.paramsKeeper)).
-		AddRoute(distr.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.distrKeeper)).
-		AddRoute(upgrade.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.upgradeKeeper))
+		AddRoute(distr.RouterKey, distr.NewCommunityPoolSpendProposalHandler(app.distrKeeper))
+		//AddRoute(upgrade.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.upgradeKeeper))
 	app.govKeeper = gov.NewKeeper(
-		app.cdc, keys[gov.StoreKey], govSubspace,
-		app.supplyKeeper, &stakingKeeper, govRouter,
+		app.cdc, keys[gov.StoreKey], app.paramsKeeper, govSubspace,
+		app.supplyKeeper, &stakingKeeper, gov.DefaultCodespace, govRouter,
 	)
 
 	// register the staking hooks
@@ -298,18 +312,19 @@ func NewEnigmaChainApp(
 	// NOTE: Any module instantiated in the module manager that is later modified
 	// must be passed by reference here.
 	app.mm = module.NewManager(
+		genaccounts.NewAppModule(app.accountKeeper),
 		genutil.NewAppModule(app.accountKeeper, app.stakingKeeper, app.BaseApp.DeliverTx),
 		auth.NewAppModule(app.accountKeeper),
 		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
 		crisis.NewAppModule(&app.crisisKeeper),
 		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
-		gov.NewAppModule(app.govKeeper, app.accountKeeper, app.supplyKeeper),
+		gov.NewAppModule(app.govKeeper, app.supplyKeeper),
 		mint.NewAppModule(app.mintKeeper),
-		slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
-		distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
-		staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
-		upgrade.NewAppModule(app.upgradeKeeper),
-		evidence.NewAppModule(app.evidenceKeeper),
+		slashing.NewAppModule(app.slashingKeeper, app.stakingKeeper),
+		distr.NewAppModule(app.distrKeeper, app.supplyKeeper),
+		staking.NewAppModule(app.stakingKeeper, app.distrKeeper, app.accountKeeper, app.supplyKeeper),
+		//upgrade.NewAppModule(app.upgradeKeeper),
+		//evidence.NewAppModule(app.evidenceKeeper),
 		//compute.NewAppModule(app.computeKeeper),
 		tokenswap.NewAppModule(app.tokenSwapKeeper, app.supplyKeeper, app.accountKeeper),
 	)
@@ -317,13 +332,14 @@ func NewEnigmaChainApp(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 
-	app.mm.SetOrderBeginBlockers(upgrade.ModuleName, mint.ModuleName, distr.ModuleName, slashing.ModuleName)
+	app.mm.SetOrderBeginBlockers(mint.ModuleName, distr.ModuleName, slashing.ModuleName)
 	app.mm.SetOrderEndBlockers(crisis.ModuleName, gov.ModuleName, staking.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// Sets the order of Genesis - Order matters, genutil is to always come last
 	app.mm.SetOrderInitGenesis(
+		genaccounts.ModuleName,
 		distr.ModuleName,
 		staking.ModuleName,
 		auth.ModuleName,
@@ -334,7 +350,7 @@ func NewEnigmaChainApp(
 		supply.ModuleName,
 		crisis.ModuleName,
 		genutil.ModuleName,
-		evidence.ModuleName,
+		// evidence.ModuleName,
 		//compute.ModuleName,
 		tokenswap.ModuleName,
 	)
@@ -347,18 +363,18 @@ func NewEnigmaChainApp(
 	//
 	// NOTE: This is not required for apps that don't use the simulator for fuzz testing
 	// transactions.
-	app.sm = module.NewSimulationManager(
-		auth.NewAppModule(app.accountKeeper),
-		bank.NewAppModule(app.bankKeeper, app.accountKeeper),
-		supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
-		gov.NewAppModule(app.govKeeper, app.accountKeeper, app.supplyKeeper),
-		mint.NewAppModule(app.mintKeeper),
-		distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
-		staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
-		slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
-	)
-
-	app.sm.RegisterStoreDecoders()
+	//app.sm = module.NewSimulationManager(
+	//	auth.NewAppModule(app.accountKeeper),
+	//	bank.NewAppModule(app.bankKeeper, app.accountKeeper),
+	//	supply.NewAppModule(app.supplyKeeper, app.accountKeeper),
+	//	gov.NewAppModule(app.govKeeper, app.accountKeeper, app.supplyKeeper),
+	//	mint.NewAppModule(app.mintKeeper),
+	//	distr.NewAppModule(app.distrKeeper, app.accountKeeper, app.supplyKeeper, app.stakingKeeper),
+	//	staking.NewAppModule(app.stakingKeeper, app.accountKeeper, app.supplyKeeper),
+	//	slashing.NewAppModule(app.slashingKeeper, app.accountKeeper, app.stakingKeeper),
+	//)
+	//
+	//app.sm.RegisterStoreDecoders()
 
 	// initialize stores
 	app.MountKVStores(keys)
@@ -379,7 +395,7 @@ func NewEnigmaChainApp(
 	if loadLatest {
 		err := app.LoadLatestVersion(app.keys[bam.MainStoreKey])
 		if err != nil {
-			tmos.Exit(err.Error())
+			cmn.Exit(err.Error())
 		}
 	}
 
@@ -433,9 +449,9 @@ func (app *EnigmaChainApp) Codec() *codec.Codec {
 }
 
 // SimulationManager implements the SimulationApp interface
-func (app *EnigmaChainApp) SimulationManager() *module.SimulationManager {
-	return app.sm
-}
+//func (app *EnigmaChainApp) SimulationManager() *module.SimulationManager {
+//	return nil // app.sm
+//}
 
 // GetMaccPerms returns a mapping of the application's module account permissions.
 func GetMaccPerms() map[string][]string {

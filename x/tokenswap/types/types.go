@@ -2,10 +2,10 @@ package types
 
 import (
 	"fmt"
+	"github.com/cosmos/cosmos-sdk/x/auth/exported"
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authexported "github.com/cosmos/cosmos-sdk/x/auth/exported"
 	supplyexported "github.com/cosmos/cosmos-sdk/x/supply/exported"
 )
 
@@ -61,14 +61,14 @@ func (s TokenSwapRecord) String() string {
 
 // AccountKeeper defines the expected account keeper
 type AccountKeeper interface {
-	GetAccount(sdk.Context, sdk.AccAddress) authexported.Account
+	GetAccount(sdk.Context, sdk.AccAddress) exported.Account
 }
 
 // SupplyKeeper defines the expected supply keeper
 type SupplyKeeper interface {
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
-	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) error
-	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) sdk.Error
+	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) sdk.Error
+	MintCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
+	BurnCoins(ctx sdk.Context, name string, amt sdk.Coins) sdk.Error
 	SetModuleAccount(sdk.Context, supplyexported.ModuleAccountI)
 }

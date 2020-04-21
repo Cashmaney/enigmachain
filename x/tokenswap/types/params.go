@@ -45,9 +45,9 @@ func (p Params) String() string {
 // ParamSetPairs returns the parameter set pairs.
 func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 	return paramtypes.ParamSetPairs{
-		paramtypes.NewParamSetPair(ParamStoreKeyMultisigApproveAddress, &p.MultisigApproveAddress, validateMultisigApproveAddress),
-		paramtypes.NewParamSetPair(ParamStoreKeyMintingMultiplier, &p.MintingMultiplier, validateMintingMultiple),
-		paramtypes.NewParamSetPair(ParamStoreKeyMintingEnabled, &p.MintingEnabled, validateMintingEnabled),
+		{ParamStoreKeyMultisigApproveAddress, &p.MultisigApproveAddress},
+		{ParamStoreKeyMintingMultiplier, &p.MintingMultiplier},
+		{ParamStoreKeyMintingEnabled, &p.MintingEnabled},
 	}
 }
 

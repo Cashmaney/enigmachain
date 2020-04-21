@@ -4,19 +4,24 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	// sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // NewHandler returns a handler for "tokenswap" type messages.
 func NewHandler(keeper SwapKeeper) sdk.Handler {
-	return func(ctx sdk.Context, msg sdk.Msg) (*sdk.Result, error) {
+	return func(ctx sdk.Context, msg sdk.Msg) sdk.Result {
 		ctx = ctx.WithEventManager(sdk.NewEventManager())
 		switch msg := msg.(type) {
 		case MsgSwapRequest:
-			return handleMsgTokenSwap(ctx, keeper, msg)
+			res, err := handleMsgTokenSwap(ctx, keeper, msg)
+			if err != nil {
+				return err.Result()
+			}
+			return *res
+
 		default:
 			errMsg := fmt.Sprintf("unrecognized tokenswap message type: %v", msg.Type())
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, errMsg)
+			return sdk.ErrUnknownRequest(errMsg).Result()
 		}
 	}
 }
@@ -24,23 +29,17 @@ func NewHandler(keeper SwapKeeper) sdk.Handler {
 // Handle a message to create a token swap
 func handleMsgTokenSwap(
 	ctx sdk.Context, keeper SwapKeeper, msg MsgSwapRequest,
-) (*sdk.Result, error) {
+) (*sdk.Result, sdk.Error) {
 
 	err := keeper.SwapIsEnabled(ctx)
 	if err != nil {
-		return nil, sdkerrors.Wrap(
-			sdkerrors.ErrUnauthorized,
-			err.Error(),
-		)
+		return nil, err
 	}
 
 	// validate signer
 	err = keeper.ValidateTokenSwapSigner(ctx, msg.SignerAddr)
 	if err != nil {
-		return nil, sdkerrors.Wrap(
-			sdkerrors.ErrUnauthorized,
-			err.Error(),
-		)
+		return nil, err
 	}
 
 	// Check if the this tokeswap request was alread processed
@@ -50,13 +49,9 @@ func handleMsgTokenSwap(
 		// So this request was already processed
 		// Check if we might have failed processing the transaction
 		if swapRecord.Done {
-			return nil, sdkerrors.Wrap(
-				sdkerrors.ErrUnauthorized,
-				fmt.Sprintf(
-					"TokenSwap with EthereumTxHash %s was already processed",
-					msg.BurnTxHash,
-				),
-			)
+			return nil, sdk.ErrUnauthorized(fmt.Sprintf(
+				"TokenSwap with EthereumTxHash %s was already processed",
+				msg.BurnTxHash))
 		}
 	}
 

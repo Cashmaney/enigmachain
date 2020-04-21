@@ -1,7 +1,7 @@
 package cli
 
 import (
-	"bufio"
+	// "bufio"
 	"errors"
 	"strconv"
 
@@ -24,8 +24,8 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 		Args:  cobra.ExactArgs(4),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			cliCtx := context.NewCLIContext().WithCodec(cdc)
-			inBuf := bufio.NewReader(cmd.InOrStdin())
-			txBldr := auth.NewTxBuilderFromCLI(inBuf).WithTxEncoder(utils.GetTxEncoder(cdc))
+			// inBuf := bufio.NewReader(cmd.InOrStdin())
+			txBldr := auth.NewTxBuilderFromCLI().WithTxEncoder(utils.GetTxEncoder(cdc))
 
 			ethereumTxHash, err := types.HexToTxHash(args[0])
 			if err != nil {
@@ -59,7 +59,7 @@ func GetTxCmd(cdc *codec.Codec) *cobra.Command {
 				amountENG,
 			)
 			if err := msg.ValidateBasic(); err != nil {
-				return err
+				return errors.New(err.ABCILog())
 			}
 
 			return utils.GenerateOrBroadcastMsgs(cliCtx, txBldr, []sdk.Msg{msg})

@@ -9,7 +9,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	// sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // Keeper maintains the link to data storage and exposes getter/setter methods for the various parts of the state machine
@@ -22,9 +22,9 @@ type Keeper struct {
 
 // NewKeeper creates new instances of the Keeper
 func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, params paramtypes.Subspace, supplyKeeper types.SupplyKeeper) Keeper {
-	if !params.HasKeyTable() {
-		params = params.WithKeyTable(types.ParamKeyTable())
-	}
+	// if !params. {
+	params = params.WithKeyTable(types.ParamKeyTable())
+	// }
 	return Keeper{
 		cdc:          cdc,
 		storeKey:     storeKey,
@@ -38,16 +38,16 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
 
-func (k Keeper) SwapIsEnabled(ctx sdk.Context) error {
+func (k Keeper) SwapIsEnabled(ctx sdk.Context) sdk.Error {
 	if !k.GetMintingEnabled(ctx) {
-		return fmt.Errorf("Token swap is disabled. Requires a parameter change proposal to enable")
+		return sdk.ErrUnauthorized("Token swap is disabled. Requires a parameter change proposal to enable")
 	}
 	return nil
 }
 
-func (k Keeper) ValidateTokenSwapSigner(ctx sdk.Context, signer sdk.AccAddress) error {
+func (k Keeper) ValidateTokenSwapSigner(ctx sdk.Context, signer sdk.AccAddress) sdk.Error {
 	if signer.String() != k.GetMultisigApproveAddress(ctx).String() {
-		return fmt.Errorf("invalid signer address")
+		return sdk.ErrUnauthorized("invalid signer address")
 	}
 	return nil
 }
@@ -56,7 +56,7 @@ func (k Keeper) GetMintedCoins(ctx sdk.Context, amtEngDust sdk.Dec) sdk.Coins {
 	// ENG has 8 decimals, and SCRT has 6, so we divide the number of ENG dust by 100
 	mintMultiplier := k.GetMintingMultiplier(ctx)
 
-	c := sdk.NewDecCoins(sdk.NewDecCoin("uscrt", amtEngDust.RoundInt()))
+	c := sdk.NewDecCoins(sdk.NewCoins(sdk.NewCoin("uscrt", amtEngDust.RoundInt())))
 	coins, _ := c.MulDecTruncate(sdk.NewDecWithPrec(1, 2)).MulDecTruncate(mintMultiplier).TruncateDecimal()
 	return coins
 }
@@ -64,7 +64,7 @@ func (k Keeper) GetMintedCoins(ctx sdk.Context, amtEngDust sdk.Dec) sdk.Coins {
 // ProcessTokenSwapRequest processes a claim that has just completed successfully with consensus
 // Also note that at this stage we already validated the swap request parameters
 func (k Keeper) ProcessTokenSwapRequest(
-	ctx sdk.Context, request types.MsgSwapRequest) error {
+	ctx sdk.Context, request types.MsgSwapRequest) sdk.Error {
 	// Store the token swap request in our state
 	// We need this to verify we process each request only once
 	store := ctx.KVStore(k.storeKey)
@@ -83,7 +83,7 @@ func (k Keeper) ProcessTokenSwapRequest(
 		tokenSwap.AmountUSCRT,
 	)
 	if err != nil {
-		return err
+		return sdk.ErrInsufficientCoins(err.ABCILog())
 	}
 
 	// Transfer new funds to receiver
@@ -94,7 +94,7 @@ func (k Keeper) ProcessTokenSwapRequest(
 		tokenSwap.AmountUSCRT,
 	)
 	if err != nil {
-		return err
+		return sdk.ErrInsufficientCoins(err.ABCILog())
 	}
 
 	tokenSwap.Done = true
@@ -106,14 +106,12 @@ func (k Keeper) ProcessTokenSwapRequest(
 }
 
 // GetPastTokenSwapRequest retrives a past token swap request
-func (k Keeper) GetPastTokenSwapRequest(ctx sdk.Context, ethereumTxHash types.EthereumTxHash) (types.TokenSwapRecord, error) {
+func (k Keeper) GetPastTokenSwapRequest(ctx sdk.Context, ethereumTxHash types.EthereumTxHash) (types.TokenSwapRecord, sdk.Error) {
 	store := ctx.KVStore(k.storeKey)
 
 	if !store.Has(ethereumTxHash.Bytes()) {
-		return types.TokenSwapRecord{}, sdkerrors.Wrap(
-			sdkerrors.ErrUnknownRequest,
-			"Unknown Ethereum tx hash: "+ethereumTxHash.String())
-
+		return types.TokenSwapRecord{}, sdk.ErrUnknownRequest(
+			"Unknown Ethereum tx hash: " + ethereumTxHash.String())
 	}
 
 	bz := store.Get(ethereumTxHash.Bytes())

@@ -2,11 +2,13 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/x/genaccounts"
 	"io"
 
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	//"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 
 	"github.com/spf13/cobra"
@@ -15,9 +17,10 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	//"github.com/cosmos/cosmos-sdk/client/flags"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	genaccscli "github.com/cosmos/cosmos-sdk/x/genaccounts/client/cli"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	app "github.com/enigmampc/EnigmaBlockchain"
 	eng "github.com/enigmampc/EnigmaBlockchain/types"
@@ -48,17 +51,13 @@ func main() {
 	}
 	// CLI commands to initialize the chain
 	rootCmd.AddCommand(genutilcli.InitCmd(ctx, cdc, app.ModuleBasics, app.DefaultNodeHome))
-	rootCmd.AddCommand(genutilcli.CollectGenTxsCmd(ctx, cdc, auth.GenesisAccountIterator{}, app.DefaultNodeHome))
+	rootCmd.AddCommand(genutilcli.CollectGenTxsCmd(ctx, cdc, genaccounts.AppModuleBasic{}, app.DefaultNodeHome))
 	rootCmd.AddCommand(genutilcli.MigrateGenesisCmd(ctx, cdc))
-	rootCmd.AddCommand(
-		genutilcli.GenTxCmd(
-			ctx, cdc, app.ModuleBasics, staking.AppModuleBasic{},
-			auth.GenesisAccountIterator{}, app.DefaultNodeHome, app.DefaultCLIHome,
-		),
-	)
+	rootCmd.AddCommand(genutilcli.GenTxCmd(ctx, cdc, app.ModuleBasics, staking.AppModuleBasic{},
+		genaccounts.AppModuleBasic{}, app.DefaultNodeHome, app.DefaultCLIHome))
 	rootCmd.AddCommand(genutilcli.ValidateGenesisCmd(ctx, cdc, app.ModuleBasics))
-	rootCmd.AddCommand(AddGenesisAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome))
-	rootCmd.AddCommand(flags.NewCompletionCmd(rootCmd, true))
+	rootCmd.AddCommand(genaccscli.AddGenesisAccountCmd(ctx, cdc, app.DefaultNodeHome, app.DefaultCLIHome))
+	rootCmd.AddCommand(client.NewCompletionCmd(rootCmd, true))
 
 	server.AddCommands(ctx, cdc, rootCmd, newApp, exportAppStateAndTMValidators)
 
@@ -73,24 +72,23 @@ func main() {
 }
 
 func newApp(logger log.Logger, db dbm.DB, traceStore io.Writer) abci.Application {
-	var cache sdk.MultiStorePersistentCache
-
-	if viper.GetBool(server.FlagInterBlockCache) {
-		cache = store.NewCommitKVStoreCacheManager()
-	}
-
-	skipUpgradeHeights := make(map[int64]bool)
-	for _, h := range viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
-		skipUpgradeHeights[int64(h)] = true
-	}
+	//var cache sdk.MultiStorePersistentCache
+	//
+	//if viper.GetBool(server.FlagInterBlockCache) {
+	//	cache = store.NewCommitKVStoreCacheManager()
+	//}
+	//
+	//skipUpgradeHeights := make(map[int64]bool)
+	//for _, h := range viper.GetIntSlice(server.FlagUnsafeSkipUpgrades) {
+	//	skipUpgradeHeights[int64(h)] = true
+	//}
 
 	return app.NewEnigmaChainApp(
-		logger, db, traceStore, true, invCheckPeriod, skipUpgradeHeights,
+		logger, db, traceStore, true, invCheckPeriod,
 		baseapp.SetPruning(store.NewPruningOptionsFromString(viper.GetString("pruning"))),
 		baseapp.SetMinGasPrices(viper.GetString(server.FlagMinGasPrices)),
 		baseapp.SetHaltHeight(viper.GetUint64(server.FlagHaltHeight)),
 		baseapp.SetHaltTime(viper.GetUint64(server.FlagHaltTime)),
-		baseapp.SetInterBlockCache(cache),
 	)
 }
 
@@ -99,7 +97,7 @@ func exportAppStateAndTMValidators(
 ) (json.RawMessage, []tmtypes.GenesisValidator, error) {
 
 	if height != -1 {
-		engApp := app.NewEnigmaChainApp(logger, db, traceStore, false, uint(1), map[int64]bool{})
+		engApp := app.NewEnigmaChainApp(logger, db, traceStore, false, uint(1))
 		err := engApp.LoadHeight(height)
 		if err != nil {
 			return nil, nil, err
@@ -107,6 +105,6 @@ func exportAppStateAndTMValidators(
 		return engApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 	}
 
-	engApp := app.NewEnigmaChainApp(logger, db, traceStore, true, uint(1), map[int64]bool{})
+	engApp := app.NewEnigmaChainApp(logger, db, traceStore, true, uint(1))
 	return engApp.ExportAppStateAndValidators(forZeroHeight, jailWhiteList)
 }

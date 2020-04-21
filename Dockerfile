@@ -22,7 +22,7 @@ RUN make build_local_no_rust
 FROM alpine:edge
 
 # Install ca-certificates
-RUN apk add --update ca-certificates
+RUN apk add --update ca-certificates lz4
 WORKDIR /root
 
 # Run enigmad by default, omit entrypoint to ease using container with enigmacli
@@ -40,15 +40,33 @@ RUN chmod +x docker_start.sh .
 # Run enigmad by default, omit entrypoint to ease using container with enigmacli
 #CMD ["/root/enigmad"]
 
+WORKDIR /root/.enigmad
+
+
 ####### STAGE 1 -- build core
 ARG MONIKER=default
 ARG CHAINID=enigma-1
 ARG GENESISPATH=https://raw.githubusercontent.com/enigmampc/EnigmaBlockchain/master/enigma-1-genesis.json
 ARG PERSISTENT_PEERS=201cff36d13c6352acfc4a373b60e83211cd3102@bootstrap.mainnet.enigma.co:26656
 
+#RUN wget http://quicksync.chainofsecrets.org/enigma-1-block700000.tar.lz4
+#
+#RUN lz4 -d enigma-1-block700000.tar.lz4 | tar xf -
+
+RUN enigmad init $MONIKER --chain-id $CHAINID
+# echo "Initializing chain: $CHAINID with node moniker: $MONIKER"
+
+RUN wget -O /root/.enigmad/config/genesis.json $GENESISPATH > /dev/null
+# echo "Downloaded genesis file from: $GENESISPATH.."
+
+RUN enigmad validate-genesis
+
+RUN sed -i 's/persistent_peers = ""/persistent_peers = "'$PERSISTENT_PEERS'"/g' ~/.enigmad/config/config.toml
+# echo "Set persistent_peers: $PERSISTENT_PEERS"
+
 ENV GENESISPATH="${GENESISPATH}"
 ENV CHAINID="${CHAINID}"
 ENV MONIKER="${MONIKER}"
 ENV PERSISTENT_PEERS="${PERSISTENT_PEERS}"
 
-ENTRYPOINT ["/bin/ash", "docker_start.sh"]
+CMD ["enigmad", "start"]

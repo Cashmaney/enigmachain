@@ -2,7 +2,6 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
 // RouterKey is used to route messages and queriers to the greeter module
@@ -38,7 +37,7 @@ func (msg MsgSwapRequest) Route() string { return RouterKey }
 func (msg MsgSwapRequest) Type() string { return "tokenswap" }
 
 // ValidateBasic runs stateless checks on the message
-func (msg MsgSwapRequest) ValidateBasic() error {
+func (msg MsgSwapRequest) ValidateBasic() sdk.Error {
 	err := msg.ValidateAmount()
 	if err != nil {
 		return err
@@ -61,36 +60,36 @@ func (msg MsgSwapRequest) ValidateBasic() error {
 	return nil
 }
 
-func (msg MsgSwapRequest) ValidateAmount() error {
+func (msg MsgSwapRequest) ValidateAmount() sdk.Error {
 	if msg.AmountENG.IsZero() {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "amount to swap must be positive")
+		return sdk.ErrUnknownRequest("amount to swap must be positive")
 	}
 	if !msg.AmountENG.Equal(sdk.NewDecFromInt(msg.AmountENG.RoundInt())) {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "amount to swap must be an integer")
+		return sdk.ErrUnknownRequest("amount to swap must be an integer")
 	}
 	if msg.AmountENG.LT(sdk.NewDec(100)) {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "amount cannot be under 100, due to lost precision from ENG dust <-> uSCRT")
+		return sdk.ErrUnknownRequest("amount cannot be under 100, due to lost precision from ENG dust <-> uSCRT")
 	}
 	return nil
 }
 
-func (msg MsgSwapRequest) ValidateReceiver() error {
+func (msg MsgSwapRequest) ValidateReceiver() sdk.Error {
 	if msg.Receiver.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
+		return sdk.ErrUnknownRequest("Receiver cannot be empty")
 	}
 	return nil
 }
 
-func (msg MsgSwapRequest) ValidateTxHash() error {
+func (msg MsgSwapRequest) ValidateTxHash() sdk.Error {
 	if msg.BurnTxHash.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
+		return sdk.ErrUnknownRequest("Receiver cannot be empty")
 	}
 	return nil
 }
 
-func (msg MsgSwapRequest) validateEthSender() error {
+func (msg MsgSwapRequest) validateEthSender() sdk.Error {
 	if msg.EthereumSender.Empty() {
-		return sdkerrors.Wrap(sdkerrors.ErrUnknownRequest, "Receiver cannot be empty")
+		return sdk.ErrUnknownRequest("Receiver cannot be empty")
 	}
 	return nil
 }

@@ -125,7 +125,7 @@ func createTokenSwapHandler(cliCtx context.CLIContext) http.HandlerFunc {
 			amountENG,
 		)
 		if err := msg.ValidateBasic(); err != nil {
-			rest.WriteErrorResponse(w, http.StatusBadRequest, err.Error())
+			rest.WriteErrorResponse(w, http.StatusBadRequest, err.ABCILog())
 			return
 		}
 
