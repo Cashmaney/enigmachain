@@ -4,3 +4,4 @@ Architecture: amd64
 Homepage: https://github.com/enigmampc/EnigmaBlockchain
 Maintainer: https://github.com/enigmampc
 Description: The Enigma Blockchain
+Version: 0.0.3b

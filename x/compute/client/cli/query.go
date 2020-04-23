@@ -13,11 +13,11 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/client/flags"
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/Cashmaney/cosmos-sdk/client"
+	"github.com/Cashmaney/cosmos-sdk/client/context"
+	"github.com/Cashmaney/cosmos-sdk/client/flags"
+	"github.com/Cashmaney/cosmos-sdk/codec"
+	sdk "github.com/Cashmaney/cosmos-sdk/types"
 
 	"github.com/enigmampc/EnigmaBlockchain/x/compute/internal/keeper"
 	"github.com/enigmampc/EnigmaBlockchain/x/compute/internal/types"

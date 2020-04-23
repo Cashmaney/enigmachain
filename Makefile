@@ -101,15 +101,15 @@ deb: build_local_no_rust
 	mv -f ./kamutd /tmp/EnigmaBlockchain/deb/bin/kamutd
 	chmod +x /tmp/EnigmaBlockchain/deb/bin/kamutd /tmp/EnigmaBlockchain/deb/bin/kamutcli
 	
-	mkdir -p /tmp/EnigmaBlockchain/deb/usr/lib
-	mv -f ./go-cosmwasm/api/libgo_cosmwasm.so /tmp/EnigmaBlockchain/deb/usr/lib/libgo_cosmwasm.so
-	chmod +x /tmp/EnigmaBlockchain/deb/usr/lib/libgo_cosmwasm.so
+#	mkdir -p /tmp/EnigmaBlockchain/deb/usr/lib
+#	mv -f ./go-cosmwasm/api/libgo_cosmwasm.so /tmp/EnigmaBlockchain/deb/usr/lib/libgo_cosmwasm.so
+#	chmod +x /tmp/EnigmaBlockchain/deb/usr/lib/libgo_cosmwasm.so
 
 	mkdir -p /tmp/EnigmaBlockchain/deb/DEBIAN
 	cp ./packaging_ubuntu/control /tmp/EnigmaBlockchain/deb/DEBIAN/control
-	printf "Version: " >> /tmp/EnigmaBlockchain/deb/DEBIAN/control
-	git tag | grep -P '^v' | tail -1 | tr -d v >> /tmp/EnigmaBlockchain/deb/DEBIAN/control
-	echo "" >> /tmp/EnigmaBlockchain/deb/DEBIAN/control
+#	printf "Version: " >> /tmp/EnigmaBlockchain/deb/DEBIAN/control
+#	git tag | grep -P '^v' | tail -1 | tr -d v >> /tmp/EnigmaBlockchain/deb/DEBIAN/control
+#	echo "" >> /tmp/EnigmaBlockchain/deb/DEBIAN/control
 	cp ./packaging_ubuntu/postinst /tmp/EnigmaBlockchain/deb/DEBIAN/postinst
 	chmod 755 /tmp/EnigmaBlockchain/deb/DEBIAN/postinst
 	cp ./packaging_ubuntu/postrm /tmp/EnigmaBlockchain/deb/DEBIAN/postrm

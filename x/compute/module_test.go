@@ -10,9 +10,9 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	sdk "github.com/Cashmaney/cosmos-sdk/types"
+	"github.com/Cashmaney/cosmos-sdk/types/module"
+	"github.com/Cashmaney/cosmos-sdk/x/auth"
 	wasmTypes "github.com/enigmampc/EnigmaBlockchain/go-cosmwasm/types"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/crypto"
