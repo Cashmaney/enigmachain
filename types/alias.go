@@ -1,8 +1,6 @@
 package types
 
-import (
-	"github.com/enigmachain/EnigmaBlockChain/types/util"
-)
+import "github.com/enigmampc/EnigmaBlockchain/types/util"
 
 // Aliases for internal types
 const (
