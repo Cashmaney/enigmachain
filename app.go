@@ -2,18 +2,15 @@ package app
 
 import (
 	"encoding/json"
-	"io"
-	"os"
-	//"path/filepath"
-
 	//"github.com/enigmampc/EnigmaBlockchain/x/compute"
-	//"github.com/spf13/viper"
+	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap"
 	abci "github.com/tendermint/tendermint/abci/types"
-	//"github.com/tendermint/tendermint/libs/cli"
 	"github.com/tendermint/tendermint/libs/log"
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmtypes "github.com/tendermint/tendermint/types"
 	dbm "github.com/tendermint/tm-db"
+	"io"
+	"os"
 
 	bam "github.com/Cashmaney/cosmos-sdk/baseapp"
 	"github.com/Cashmaney/cosmos-sdk/codec"
@@ -43,10 +40,10 @@ const appName = "enigma"
 
 var (
 	// DefaultCLIHome default home directories for the application CLI
-	DefaultCLIHome = os.ExpandEnv("$HOME/.kamutcli")
+	DefaultCLIHome = os.ExpandEnv("$HOME/.enigmacli")
 
 	// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-	DefaultNodeHome = os.ExpandEnv("$HOME/.kamutd")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.enigmad")
 
 	// ModuleBasics The module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration
@@ -66,6 +63,7 @@ var (
 		supply.AppModuleBasic{},
 		upgrade.AppModuleBasic{},
 		evidence.AppModuleBasic{},
+		tokenswap.AppModuleBasic{},
 	)
 
 	// module account permissions
@@ -76,6 +74,7 @@ var (
 		staking.BondedPoolName:    {supply.Burner, supply.Staking},
 		staking.NotBondedPoolName: {supply.Burner, supply.Staking},
 		gov.ModuleName:            {supply.Burner},
+		tokenswap.ModuleName:      {supply.Minter},
 	}
 )
 
@@ -120,8 +119,8 @@ type EnigmaChainApp struct {
 	paramsKeeper   params.Keeper
 	upgradeKeeper  upgrade.Keeper
 	evidenceKeeper evidence.Keeper
-	//computeKeeper  compute.Keeper
-
+	//computeKeeper   compute.Keeper
+	tokenSwapKeeper tokenswap.SwapKeeper
 	// the module manager
 	mm *module.Manager
 
@@ -131,9 +130,9 @@ type EnigmaChainApp struct {
 
 // WasmWrapper allows us to use namespacing in the config file
 // This is only used for parsing in the app, x/compute expects WasmConfig
-type WasmWrapper struct {
-	//Wasm compute.WasmConfig `mapstructure:"wasm"`
-}
+//type WasmWrapper struct {
+//	Wasm compute.WasmConfig `mapstructure:"wasm"`
+//}
 
 // NewEnigmaChainApp is a constructor function for enigmaChainApp
 func NewEnigmaChainApp(
@@ -166,6 +165,7 @@ func NewEnigmaChainApp(
 		upgrade.StoreKey,
 		evidence.StoreKey,
 		//compute.StoreKey,
+		tokenswap.StoreKey,
 	)
 
 	tKeys := sdk.NewTransientStoreKeys(staking.TStoreKey, params.TStoreKey)
@@ -190,7 +190,7 @@ func NewEnigmaChainApp(
 	govSubspace := app.paramsKeeper.Subspace(gov.DefaultParamspace).WithKeyTable(gov.ParamKeyTable())
 	crisisSubspace := app.paramsKeeper.Subspace(crisis.DefaultParamspace)
 	evidenceSubspace := app.paramsKeeper.Subspace(evidence.DefaultParamspace)
-
+	tokenswapSubspace := app.paramsKeeper.Subspace(tokenswap.DefaultParamspace)
 	// The AccountKeeper handles address -> account lookups
 	app.accountKeeper = auth.NewAccountKeeper(
 		app.cdc,
@@ -260,7 +260,8 @@ func NewEnigmaChainApp(
 
 	app.evidenceKeeper = *evidenceKeeper
 
-	//// just re-use the full router - do we want to limit this more?
+	app.tokenSwapKeeper = tokenswap.NewKeeper(app.cdc, keys[tokenswap.StoreKey], tokenswapSubspace, app.supplyKeeper)
+	// just re-use the full router - do we want to limit this more?
 	//var computeRouter = bApp.Router()
 	//// better way to get this dir???
 	//homeDir := viper.GetString(cli.HomeFlag)
@@ -272,7 +273,7 @@ func NewEnigmaChainApp(
 	//	panic("error while reading wasm config: " + err.Error())
 	//}
 	//wasmConfig := wasmWrap.Wasm
-	//
+
 	//app.computeKeeper = compute.NewKeeper(app.cdc, keys[compute.StoreKey], app.accountKeeper, app.bankKeeper, computeRouter, computeDir, wasmConfig)
 
 	// register the proposal types
@@ -310,6 +311,7 @@ func NewEnigmaChainApp(
 		upgrade.NewAppModule(app.upgradeKeeper),
 		evidence.NewAppModule(app.evidenceKeeper),
 		//compute.NewAppModule(app.computeKeeper),
+		tokenswap.NewAppModule(app.tokenSwapKeeper, app.supplyKeeper, app.accountKeeper),
 	)
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -334,6 +336,7 @@ func NewEnigmaChainApp(
 		genutil.ModuleName,
 		evidence.ModuleName,
 		//compute.ModuleName,
+		tokenswap.ModuleName,
 	)
 
 	// register all module routes and module queriers

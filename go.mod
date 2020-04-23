@@ -1,10 +1,9 @@
-module github.com/enigmachain/EnigmaBlockChain
+module github.com/enigmampc/EnigmaBlockchain
 
 go 1.14
 
 require (
 	github.com/Cashmaney/cosmos-sdk v0.38.3-b
-	github.com/enigmampc/EnigmaBlockchain v0.1.0 // indirect
 	github.com/gorilla/mux v1.7.3
 	github.com/spf13/cobra v0.0.6
 	github.com/spf13/pflag v1.0.5

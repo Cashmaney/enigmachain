@@ -32,7 +32,7 @@ type KVStore interface {
 }
 
 var db_vtable = C.DB_vtable{
-	read_db: (C.read_db_fn)(C.cGet_cgo),
+	read_db:  (C.read_db_fn)(C.cGet_cgo),
 	write_db: (C.write_db_fn)(C.cSet_cgo),
 }
 
