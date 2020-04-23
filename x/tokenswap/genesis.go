@@ -1,8 +1,8 @@
 package tokenswap
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/supply"
+	sdk "github.com/Cashmaney/cosmos-sdk/types"
+	"github.com/Cashmaney/cosmos-sdk/x/supply"
 	abci "github.com/tendermint/tendermint/abci/types"
 )
 

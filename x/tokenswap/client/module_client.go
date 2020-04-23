@@ -1,14 +1,14 @@
 package client
 
 import (
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/Cashmaney/cosmos-sdk/client/context"
+	"github.com/Cashmaney/cosmos-sdk/codec"
 	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap/client/cli"
 	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap/client/rest"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/Cashmaney/cosmos-sdk/client/flags"
 )
 
 // GetQueryCmd returns the cli query commands for this module

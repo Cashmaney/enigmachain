@@ -5,8 +5,8 @@ import (
 
 	"gopkg.in/yaml.v2"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/subspace"
+	sdk "github.com/Cashmaney/cosmos-sdk/types"
+	paramtypes "github.com/Cashmaney/cosmos-sdk/x/params/subspace"
 )
 
 const (

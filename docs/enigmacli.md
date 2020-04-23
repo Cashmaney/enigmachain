@@ -303,11 +303,11 @@ The action tag always equals the message type returned by the `Type()` function 
 
 You can find a list of available `events` on each of the SDK modules:
 
-- [Staking events](https://github.com/cosmos/cosmos-sdk/blob/master/x/staking/spec/07_events.md)
-- [Governance events](https://github.com/cosmos/cosmos-sdk/blob/master/x/gov/spec/04_events.md)
-- [Slashing events](https://github.com/cosmos/cosmos-sdk/blob/master/x/slashing/spec/06_events.md)
-- [Distribution events](https://github.com/cosmos/cosmos-sdk/blob/master/x/distribution/spec/06_events.md)
-- [Bank events](https://github.com/cosmos/cosmos-sdk/blob/master/x/bank/spec/04_events.md)
+- [Staking events](https://github.com/Cashmaney/cosmos-sdk/blob/master/x/staking/spec/07_events.md)
+- [Governance events](https://github.com/Cashmaney/cosmos-sdk/blob/master/x/gov/spec/04_events.md)
+- [Slashing events](https://github.com/Cashmaney/cosmos-sdk/blob/master/x/slashing/spec/06_events.md)
+- [Distribution events](https://github.com/Cashmaney/cosmos-sdk/blob/master/x/distribution/spec/06_events.md)
+- [Bank events](https://github.com/Cashmaney/cosmos-sdk/blob/master/x/bank/spec/04_events.md)
   :::
 
 #### Matching a Transaction's Hash
@@ -412,7 +412,7 @@ enigmacli tx distribution withdraw-rewards \
 
 #### Delegate to a Validator
 
-On mainnet, you can delegate `uscrt` to a validator. These delegators can receive part of the validator's fee revenue. Read more about the [Cosmos Token Model](https://github.com/cosmos/cosmos/raw/master/Cosmos_Token_Model.pdf).
+On mainnet, you can delegate `uscrt` to a validator. These delegators can receive part of the validator's fee revenue. Read more about the [Cosmos Token Model](https://github.com/Cashmaney/cosmos/raw/master/Cosmos_Token_Model.pdf).
 
 ##### Query Validators
 

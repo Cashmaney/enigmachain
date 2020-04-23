@@ -8,9 +8,9 @@ import (
 	"testing"
 	"time"
 
-	stypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth"
+	stypes "github.com/Cashmaney/cosmos-sdk/store/types"
+	sdk "github.com/Cashmaney/cosmos-sdk/types"
+	"github.com/Cashmaney/cosmos-sdk/x/auth"
 	"github.com/enigmampc/EnigmaBlockchain/x/compute/internal/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

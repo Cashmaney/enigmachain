@@ -8,12 +8,12 @@ import (
 	"github.com/enigmampc/EnigmaBlockchain/x/tokenswap/types"
 	"github.com/spf13/cobra"
 
-	"github.com/cosmos/cosmos-sdk/client/context"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/x/auth"
-	"github.com/cosmos/cosmos-sdk/x/auth/client/utils"
+	"github.com/Cashmaney/cosmos-sdk/client/context"
+	"github.com/Cashmaney/cosmos-sdk/codec"
+	"github.com/Cashmaney/cosmos-sdk/x/auth"
+	"github.com/Cashmaney/cosmos-sdk/x/auth/client/utils"
 
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdk "github.com/Cashmaney/cosmos-sdk/types"
 )
 
 // GetTxCmd is the CLI command for creating a token swap request

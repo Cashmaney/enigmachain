@@ -1,6 +1,6 @@
 package types
 
-import "github.com/cosmos/cosmos-sdk/codec"
+import "github.com/Cashmaney/cosmos-sdk/codec"
 
 func RegisterCodec(cdc *codec.Codec) {
 	cdc.RegisterConcrete(MsgSwapRequest{}, "tokenswap/TokenSwap", nil)

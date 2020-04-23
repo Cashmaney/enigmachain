@@ -1,9 +1,9 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/codec"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	"github.com/Cashmaney/cosmos-sdk/codec"
+	sdk "github.com/Cashmaney/cosmos-sdk/types"
+	sdkerrors "github.com/Cashmaney/cosmos-sdk/types/errors"
 	wasmTypes "github.com/enigmampc/EnigmaBlockchain/go-cosmwasm/types"
 )
 
