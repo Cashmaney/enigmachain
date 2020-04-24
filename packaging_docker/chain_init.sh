@@ -14,7 +14,8 @@ kamutcli keys add b --keyring-backend test
 kamutd add-genesis-account $(kamutcli keys show -a a --keyring-backend test) 1000000000000uscrt # 1 SCRT == 10^6 uSCRT
 kamutd add-genesis-account $(kamutcli keys show -a b --keyring-backend test) 2000000000000uscrt # 1 SCRT == 10^6 uSCRT
 
-kamutd validate-genesis # make sure genesis file is correct
+# make sure genesis file is correct
+kamutd validate-genesis
 
 # `kamutd export` to send genesis.json to validators
 
@@ -22,7 +23,8 @@ kamutd gentx --name a --amount 1000000uscrt --keyring-backend test # generate a 
 
 kamutd collect-gentxs # input the genTx into the genesis file, so that the chain is aware of the validators
 
-kamutd validate-genesis # make sure genesis file is correct
+kamutd validate-genesis
+
 
 # `kamutd export` to send genesis.json to validators
 
