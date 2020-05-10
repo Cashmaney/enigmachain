@@ -1,6 +1,6 @@
 ***NOTE:*** You DO NOT want to use the v0.1.0 on an existing mainnet validator node. It will not work. <br>
 ***NOTE 2:*** We recommend you to first remove older `enigmachain` installations to prevent collisions. <br>
-***NOTE 3:*** Before removing, changing or doing anything with the old `enigmad`,`enigmacli` installations - make sure to back up your keys and recovery seeds!
+***NOTE 3:*** Before removing, changing or doing anything with the old `secretd`,`secretcli` installations - make sure to back up your keys and recovery seeds!
 
 ## Set up a light client
 For smart contract testing and development, most of you would choose this option.
@@ -18,18 +18,18 @@ sudo dpkg -i enigma-blockchain_0.1.0_amd64.deb
 ```
 4. Configure the client to point to the testnet nodes:
 ```bash
-enigmacli config chain-id enigma-testnet
-enigmacli config node tcp://bootstrap.testnet.enigma.co:26657
+secretcli config chain-id enigma-testnet
+secretcli config node tcp://bootstrap.testnet.enigma.co:26657
 ```
 
 5. Check installation:
 ```bash
-enigmacli status
+secretcli status
 ```
 
 ## Use smart contracts
 The smart contracts module we embedded into enigma-blockchain is called `compute`.
-run `enigmacli tx compute --help` for more info.
+run `secretcli tx compute --help` for more info.
 
 Smart Contracts docs will be posted soon, in the meantime you should check out [CosmWasm's docs](https://github.com/confio/cosmwasm) for info about writing and deploying smart contracts.
 
@@ -39,7 +39,7 @@ Please don't abuse this service—the number of available tokens is limited.
 1. Head to https://faucet.testnet.enigma.co .
 2. Generate a key-pair:
 ```bash
-enigmacli keys add [your-key-name]
+secretcli keys add [your-key-name]
 ```
 3. Fill in your address and press `Send me tokens`.
 
@@ -51,47 +51,47 @@ enigmacli keys add [your-key-name]
 2. Initialize your installation of the Enigma Blockchain. Choose a  **moniker**  for yourself that will be public, and replace  `<MONIKER>`  with your moniker below
 
 ```bash
-enigmad init <MONIKER> --chain-id enigma-testnet
+secretd init <MONIKER> --chain-id enigma-testnet
 ```
 3. Download a copy of the genesis file:
 ```bahs
-wget -O ~/.enigmad/config/genesis.json "https://raw.githubusercontent.com/enigmampc/EnigmaBlockchain/master/enigma-testnet-genesis.json"
+wget -O ~/.secretd/config/genesis.json "https://raw.githubusercontent.com/enigmampc/EnigmaBlockchain/master/enigma-testnet-genesis.json"
 ```
 
 4. Validate the checksum of the file:
 ```bash
-echo "2e73c0277f515636c727af3b25c43d58d6031eb8c995b3c2578a872d6095349f $HOME/.enigmad/config/genesis.json" | sha256sum --check
+echo "2e73c0277f515636c727af3b25c43d58d6031eb8c995b3c2578a872d6095349f $HOME/.secretd/config/genesis.json" | sha256sum --check
 ```
 
 5. Validate genesis:
 ```bash
-enigmad validate-genesis
+secretd validate-genesis
 ```
 
 6. Add the bootstrap node as a persistent peer:
 ```bash
-perl -i -pe 's/persistent_peers = ""/persistent_peers = "16e95298703bfbf6565a1cbb6691cf30129f52ca\@bootstrap.testnet.enigma.co:26656"/' ~/.enigmad/config/config.toml
+perl -i -pe 's/persistent_peers = ""/persistent_peers = "16e95298703bfbf6565a1cbb6691cf30129f52ca\@bootstrap.testnet.enigma.co:26656"/' ~/.secretd/config/config.toml
 ```
 
 7. Run your node:
 ```bash
-sudo systemctl enable enigma-node
-sudo systemctl start enigma-node
+sudo systemctl enable secret-node
+sudo systemctl start secret-node
 ```
 
 8. Verify success:
 ```bash
-journalctl -f -u enigma-node
+journalctl -f -u secret-node
 ```
 
 Logs should look similar to this:
 ```bash
-Mar 05 19:13:08 ip-172-31-44-28 enigmad[3083]: I[2020-03-05|19:13:08.623] Executed block                               module=state height=1920 validTxs=0 invalidTxs=0
-Mar 05 19:13:08 ip-172-31-44-28 enigmad[3083]: I[2020-03-05|19:13:08.633] Committed state                              module=state height=1920 txs=0 appHash=079C94F8198AC7F25BF5CF453F12B56A73816A4D07BA01630D3138A66136B340
-Mar 05 19:13:13 ip-172-31-44-28 enigmad[3083]: I[2020-03-05|19:13:13.698] Executed block                               module=state height=1921 validTxs=0 invalidTxs=0
-Mar 05 19:13:13 ip-172-31-44-28 enigmad[3083]: I[2020-03-05|19:13:13.707] Committed state                              module=state height=1921 txs=0 appHash=1CB9AA6337DCF83F09687965CEF539FD25AA17F5BB8AF520575A891CFB05A178
-Mar 05 19:13:18 ip-172-31-44-28 enigmad[3083]: I[2020-03-05|19:13:18.775] Executed block                               module=state height=1922 validTxs=0 invalidTxs=0
-Mar 05 19:13:18 ip-172-31-44-28 enigmad[3083]: I[2020-03-05|19:13:18.784] Committed state                              module=state height=1922 txs=0 appHash=E27C56C5F1D3A85E1E75F3882877065B06BACFC5CED8FA401CE066B8FFEDF608
+Mar 05 19:13:08 ip-172-31-44-28 secretd[3083]: I[2020-03-05|19:13:08.623] Executed block                               module=state height=1920 validTxs=0 invalidTxs=0
+Mar 05 19:13:08 ip-172-31-44-28 secretd[3083]: I[2020-03-05|19:13:08.633] Committed state                              module=state height=1920 txs=0 appHash=079C94F8198AC7F25BF5CF453F12B56A73816A4D07BA01630D3138A66136B340
+Mar 05 19:13:13 ip-172-31-44-28 secretd[3083]: I[2020-03-05|19:13:13.698] Executed block                               module=state height=1921 validTxs=0 invalidTxs=0
+Mar 05 19:13:13 ip-172-31-44-28 secretd[3083]: I[2020-03-05|19:13:13.707] Committed state                              module=state height=1921 txs=0 appHash=1CB9AA6337DCF83F09687965CEF539FD25AA17F5BB8AF520575A891CFB05A178
+Mar 05 19:13:18 ip-172-31-44-28 secretd[3083]: I[2020-03-05|19:13:18.775] Executed block                               module=state height=1922 validTxs=0 invalidTxs=0
+Mar 05 19:13:18 ip-172-31-44-28 secretd[3083]: I[2020-03-05|19:13:18.784] Committed state                              module=state height=1922 txs=0 appHash=E27C56C5F1D3A85E1E75F3882877065B06BACFC5CED8FA401CE066B8FFEDF608
 ```
 
 You have an active full node :tada:

@@ -18,14 +18,14 @@ wget https://enigmaco-website.s3.amazonaws.com/enigmachain_0.0.1_amd64.deb
 
 ### 2. Make sure you don't have a previous installation (from testnet):
 
-**Note:** If you will be using the same key from testnet you can export it to `stderr` with `enigmacli keys export <key-alias>` and paste it into `my.key` and later import it with `enigmacli keys import <key-alias> my.key`.
+**Note:** If you will be using the same key from testnet you can export it to `stderr` with `secretcli keys export <key-alias>` and paste it into `my.key` and later import it with `secretcli keys import <key-alias> my.key`.
 
 ```bash
 sudo dpkg -r enigmachain
-sudo rm -rf ~/.enigmad ~/.enigmacli
+sudo rm -rf ~/.secretd ~/.secretcli
 sudo rm -rf ~/.engd ~/.engcli
-sudo rm -rf "$(which enigmad)"
-sudo rm -rf "$(which enigmacli)"
+sudo rm -rf "$(which secretd)"
+sudo rm -rf "$(which secretcli)"
 sudo rm -rf "$(which engcli)"
 sudo rm -rf "$(which engd)"
 ```
@@ -41,7 +41,7 @@ sudo dpkg -i enigmachain_0.0.1_amd64.deb
 _Note: Even if we are running this command and the previous one with sudo, this package does not need to be run as root_.
 
 ```
-sudo perl -i -pe "s/XXXXX/$(logname)/" /etc/systemd/system/enigma-node.service
+sudo perl -i -pe "s/XXXXX/$(logname)/" /etc/systemd/system/secret-node.service
 ```
 
 ### 5. Initialize your installation. Choose a **moniker** for yourself that will be public, and replace `<MONIKER>` with your moniker below
@@ -76,22 +76,22 @@ If you are curious, you can query the RPC endpoint on that node http://bootstrap
 perl -i -pe 's/persistent_peers = ""/persistent_peers = "6795f5e88edab2e225389eb9b6d6a2f715ddbcd2\@bootstrap.enigmachain.enigma.co:26656"/' ~/.engd/config/config.toml
 ```
 
-### 10. Enable `enigma-node` as a system service:
+### 10. Enable `secret-node` as a system service:
 
 ```
-sudo systemctl enable enigma-node
+sudo systemctl enable secret-node
 ```
 
-### 11. Start `enigma-node` as a system service:
+### 11. Start `secret-node` as a system service:
 
 ```
-sudo systemctl start enigma-node
+sudo systemctl start secret-node
 ```
 
 ### 12. If everything above worked correctly, the following command will show your node streaming blocks (this is for debugging purposes only, kill this command anytime with Ctrl-C):
 
 ```
-journalctl -f -u enigma-node
+journalctl -f -u secret-node
 -- Logs begin at Mon 2020-02-10 16:41:59 UTC. --
 Feb 10 21:18:34 ip-172-31-41-58 engd[8814]: I[2020-02-10|21:18:34.307] Executed block                               module=state height=2629 validTxs=0 invalidTxs=0
 Feb 10 21:18:34 ip-172-31-41-58 engd[8814]: I[2020-02-10|21:18:34.317] Committed state                              module=state height=2629 txs=0 appHash=34BC6CF2A11504A43607D8EBB2785ED5B20EAB4221B256CA1D32837EBC4B53C5

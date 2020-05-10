@@ -1,7 +1,7 @@
 # Simple usage with a mounted data directory:
 # > docker build -t enigma .
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.enigmad:/root/.enigmad -v ~/.enigmacli:/root/.enigmacli enigma enigmad init
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.enigmad:/root/.enigmad -v ~/.enigmacli:/root/.enigmacli enigma enigmad start
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.secretd:/root/.secretd -v ~/.secretcli:/root/.secretcli enigma secretd init
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.secretd:/root/.secretd -v ~/.secretcli:/root/.secretcli enigma secretd start
 FROM rust:1.42-stretch AS build-env-rust
 
 # Set working directory for the build
@@ -44,14 +44,14 @@ WORKDIR /root
 
 # Copy over binaries from the build-env
 COPY --from=build-env-rust /go/src/github.com/enigmampc/enigmablockchain/go-cosmwasm/target/release/libgo_cosmwasm.so /usr/lib/
-COPY --from=build-env /go/src/github.com/enigmampc/enigmablockchain/enigmad /usr/bin/enigmad
-COPY --from=build-env  /go/src/github.com/enigmampc/enigmablockchain/enigmacli /usr/bin/enigmacli
+COPY --from=build-env /go/src/github.com/enigmampc/enigmablockchain/secretd /usr/bin/secretd
+COPY --from=build-env  /go/src/github.com/enigmampc/enigmablockchain/secretcli /usr/bin/secretcli
 
 COPY ./packaging_docker/chain_init.sh .
 COPY ./packaging_docker/signed_swap_tx.json .
 
-RUN chmod +x /usr/bin/enigmad
-RUN chmod +x /usr/bin/enigmacli
+RUN chmod +x /usr/bin/secretd
+RUN chmod +x /usr/bin/secretcli
 
-# Run enigmad by default, omit entrypoint to ease using container with enigmacli
+# Run secretd by default, omit entrypoint to ease using container with secretcli
 ENTRYPOINT ["/bin/bash", "chain_init.sh"]

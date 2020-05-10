@@ -1,7 +1,7 @@
 # Simple usage with a mounted data directory:
 # > docker build -t enigma .
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.enigmad:/root/.enigmad -v ~/.enigmacli:/root/.enigmacli enigma enigmad init
-# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.enigmad:/root/.enigmad -v ~/.enigmacli:/root/.enigmacli enigma enigmad start
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.secretd:/root/.secretd -v ~/.secretcli:/root/.secretcli enigma secretd init
+# > docker run -it -p 26657:26657 -p 26656:26656 -v ~/.secretd:/root/.secretd -v ~/.secretcli:/root/.secretcli enigma secretd start
 FROM rust:1.42-stretch AS build-env-rust
 
 # Set working directory for the build
@@ -36,5 +36,5 @@ RUN go mod tidy
 
 COPY ./packaging_docker/build_deb.sh .
 
-# Run enigmad by default, omit entrypoint to ease using container with enigmacli
+# Run secretd by default, omit entrypoint to ease using container with secretcli
 CMD ["/bin/bash", "build_deb.sh"]

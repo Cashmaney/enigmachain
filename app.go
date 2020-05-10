@@ -36,14 +36,14 @@ import (
 	upgradeclient "github.com/Cashmaney/cosmos-sdk/x/upgrade/client"
 )
 
-const appName = "enigma"
+const appName = "secret"
 
 var (
 	// DefaultCLIHome default home directories for the application CLI
-	DefaultCLIHome = os.ExpandEnv("$HOME/.enigmacli")
+	DefaultCLIHome = os.ExpandEnv("$HOME/.secretcli")
 
 	// DefaultNodeHome sets the folder where the applcation data and configuration will be stored
-	DefaultNodeHome = os.ExpandEnv("$HOME/.enigmad")
+	DefaultNodeHome = os.ExpandEnv("$HOME/.secretd")
 
 	// ModuleBasics The module BasicManager is in charge of setting up basic,
 	// non-dependant module elements, such as codec registration

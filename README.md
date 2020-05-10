@@ -42,8 +42,8 @@ Mainnet is out! Get the latest release at https://github.com/enigmampc/EnigmaBlo
 
 # Docs
 
-- [Install the `enigmacli` light client (Windows, Mac & Linux)](/docs/light-client-mainnet.md)
-- [How to use the `enigmacli` light client](/docs/enigmacli.md)
+- [Install the `secretcli` light client (Windows, Mac & Linux)](/docs/light-client-mainnet.md)
+- [How to use the `secretcli` light client](/docs/secretcli.md)
 - [How to participate in on-chain governance](docs/using-governance.md)
 - [How to run a full node on mainnet](/docs/validators-and-full-nodes/run-full-node-mainnet.md)
 - [Ledger Nano S (and X) support](/docs/ledger-nano-s.md)
