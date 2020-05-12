@@ -20,6 +20,10 @@ type Keeper struct {
 	supplyKeeper types.SupplyKeeper
 }
 
+func (k Keeper) Cdc() *codec.Codec {
+	return k.cdc
+}
+
 // NewKeeper creates new instances of the Keeper
 func NewKeeper(cdc *codec.Codec, storeKey sdk.StoreKey, params paramtypes.Subspace, supplyKeeper types.SupplyKeeper) Keeper {
 	if !params.HasKeyTable() {
@@ -67,14 +71,13 @@ func (k Keeper) ProcessTokenSwapRequest(
 	ctx sdk.Context, request types.MsgSwapRequest) error {
 	// Store the token swap request in our state
 	// We need this to verify we process each request only once
-	store := ctx.KVStore(k.storeKey)
 
 	uscrtCoin := k.GetMintedCoins(ctx, request.AmountENG)
 
 	tokenSwap := types.NewTokenSwapRecord(request.BurnTxHash, request.EthereumSender, request.Receiver, uscrtCoin, false)
 
 	// Register the swap as started
-	store.Set(tokenSwap.BurnTxHash.Bytes(), k.cdc.MustMarshalBinaryBare(tokenSwap))
+	k.SetSwap(ctx, tokenSwap)
 
 	// Mint new uSCRTs
 	err := k.supplyKeeper.MintCoins(
@@ -100,9 +103,15 @@ func (k Keeper) ProcessTokenSwapRequest(
 	tokenSwap.Done = true
 
 	//update the status of the swap as successful
-	store.Set(tokenSwap.BurnTxHash.Bytes(), k.cdc.MustMarshalBinaryBare(tokenSwap))
+	k.SetSwap(ctx, tokenSwap)
 
 	return nil
+}
+
+func (k Keeper) SetSwap(ctx sdk.Context, swap types.TokenSwapRecord) {
+	store := ctx.KVStore(k.storeKey)
+
+	store.Set(swap.BurnTxHash.Bytes(), k.cdc.MustMarshalBinaryBare(swap))
 }
 
 // GetPastTokenSwapRequest retrives a past token swap request
@@ -113,7 +122,6 @@ func (k Keeper) GetPastTokenSwapRequest(ctx sdk.Context, ethereumTxHash types.Et
 		return types.TokenSwapRecord{}, sdkerrors.Wrap(
 			sdkerrors.ErrUnknownRequest,
 			"Unknown Ethereum tx hash: "+ethereumTxHash.String())
-
 	}
 
 	bz := store.Get(ethereumTxHash.Bytes())
