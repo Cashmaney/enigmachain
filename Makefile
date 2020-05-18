@@ -94,7 +94,7 @@ deb: build_local_no_rust
     ifneq ($(UNAME_S),Linux)
 		exit 1
     endif
-	rm -rf /tmp/EnigmaBlockchain
+	rm -rf /tmp/SecretNetwork
 	
 	mkdir -p /tmp/SecretNetwork/deb/bin
 	mv -f ./secretcli /tmp/SecretNetwork/deb/bin/secretcli
