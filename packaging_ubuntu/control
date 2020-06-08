@@ -4,3 +4,4 @@ Architecture: amd64
 Homepage: https://github.com/enigmampc/SecretNetwork
 Maintainer: https://github.com/enigmampc
 Description: The Secret Network
+Version: 0.2.0

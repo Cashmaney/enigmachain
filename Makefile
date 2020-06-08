@@ -72,8 +72,6 @@ build_local_no_rust:
 	go build -mod=readonly $(BUILD_FLAGS) ./cmd/secretcli
 
 build_local:
-	cd go-cosmwasm && rustup run nightly cargo build --release --features backtraces
-	cp go-cosmwasm/target/release/libgo_cosmwasm.so go-cosmwasm/api
 	@ #this pulls out ELF symbols, 80% size reduction!
 	go build -mod=readonly $(BUILD_FLAGS) ./cmd/secretd
 	go build -mod=readonly $(BUILD_FLAGS) ./cmd/secretcli
@@ -100,16 +98,9 @@ deb: build_local_no_rust
 	mv -f ./secretcli /tmp/SecretNetwork/deb/bin/secretcli
 	mv -f ./secretd /tmp/SecretNetwork/deb/bin/secretd
 	chmod +x /tmp/SecretNetwork/deb/bin/secretd /tmp/SecretNetwork/deb/bin/secretcli
-	
-	mkdir -p /tmp/SecretNetwork/deb/usr/lib
-	mv -f ./go-cosmwasm/api/libgo_cosmwasm.so /tmp/SecretNetwork/deb/usr/lib/libgo_cosmwasm.so
-	chmod +x /tmp/SecretNetwork/deb/usr/lib/libgo_cosmwasm.so
 
 	mkdir -p /tmp/SecretNetwork/deb/DEBIAN
 	cp ./packaging_ubuntu/control /tmp/SecretNetwork/deb/DEBIAN/control
-	printf "Version: " >> /tmp/SecretNetwork/deb/DEBIAN/control
-	git tag | grep -P '^v' | tail -1 | tr -d v >> /tmp/SecretNetwork/deb/DEBIAN/control
-	echo "" >> /tmp/SecretNetwork/deb/DEBIAN/control
 	cp ./packaging_ubuntu/postinst /tmp/SecretNetwork/deb/DEBIAN/postinst
 	chmod 755 /tmp/SecretNetwork/deb/DEBIAN/postinst
 	cp ./packaging_ubuntu/postrm /tmp/SecretNetwork/deb/DEBIAN/postrm
