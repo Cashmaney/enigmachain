@@ -1,11 +1,11 @@
 #!/bin/bash
 
-secretcli config chain-id enigma-testnet # now we won't need to type --chain-id enigma-testnet every time
+secretcli config chain-id secret-testnet # now we won't need to type --chain-id enigma-testnet every time
 secretcli config output json
 secretcli config indent true
 secretcli config trust-node true # true if you trust the full-node you are connecting to, false otherwise
 
-secretd init banana --chain-id enigma-testnet # banana==moniker==user-agent of this node
+secretd init banana --chain-id secret-testnet # banana==moniker==user-agent of this node
 perl -i -pe 's/"stake"/"uscrt"/g' ~/.secretd/config/genesis.json # change the default staking denom from stake to uscrt
 
 secretcli keys add a --keyring-backend test
@@ -27,3 +27,4 @@ secretd validate-genesis # make sure genesis file is correct
 # `secretd export` to send genesis.json to validators
 
 secretd start --pruning nothing # starts a node
+

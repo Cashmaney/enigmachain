@@ -294,16 +294,22 @@ func NewEnigmaChainApp(
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
 
-	app.mm.SetOrderBeginBlockers(upgrade.ModuleName, mint.ModuleName, distr.ModuleName, slashing.ModuleName)
+	app.mm.SetOrderBeginBlockers(
+		upgrade.ModuleName,
+		mint.ModuleName,
+		distr.ModuleName,
+		slashing.ModuleName,
+		evidence.ModuleName)
 	app.mm.SetOrderEndBlockers(crisis.ModuleName, gov.ModuleName, staking.ModuleName)
 
 	// NOTE: The genutils module must occur after staking so that pools are
 	// properly initialized with tokens from genesis accounts.
 	// Sets the order of Genesis - Order matters, genutil is to always come last
 	app.mm.SetOrderInitGenesis(
+		auth.ModuleName,
 		distr.ModuleName,
 		staking.ModuleName,
-		auth.ModuleName,
+
 		bank.ModuleName,
 		slashing.ModuleName,
 		gov.ModuleName,
